@@ -19,10 +19,10 @@ except ImportError:
 # 1. 工程配置
 # ==========================================
 st.set_page_config(
-    page_title="Bluey美食魔法屋 v48.1",
+    page_title="Bluey美食魔法屋 v49.0",
     page_icon="🦴",
     layout="centered",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="auto" # 侧边栏自动模式
 )
 
 # 📂 文件路径
@@ -36,22 +36,17 @@ FONT_FILE = os.path.join(BASE_DIR, "SimHei.ttf")
 # ==========================================
 @st.cache_resource
 def load_custom_font():
-    """下载中文字体，解决方框乱码"""
     if not os.path.exists(FONT_FILE):
         url = "https://github.com/StellarCN/scp_zh/raw/master/fonts/SimHei.ttf"
         try:
             r = requests.get(url, timeout=30)
-            with open(FONT_FILE, "wb") as f:
-                f.write(r.content)
-        except:
-            return ImageFont.load_default()
+            with open(FONT_FILE, "wb") as f: f.write(r.content)
+        except: return ImageFont.load_default()
     return FONT_FILE
 
 def get_pil_font(size):
-    try:
-        return ImageFont.truetype(load_custom_font(), size)
-    except:
-        return ImageFont.load_default()
+    try: return ImageFont.truetype(load_custom_font(), size)
+    except: return ImageFont.load_default()
 
 def load_user_data():
     default = {
@@ -65,8 +60,7 @@ def load_user_data():
             with open(USER_DATA_FILE, "r", encoding="utf-8") as f:
                 saved = json.load(f)
                 default.update(saved)
-        except:
-            pass
+        except: pass
     return default
 
 def save_user_data():
@@ -75,11 +69,8 @@ def save_user_data():
 
 def load_history():
     if os.path.exists(HISTORY_FILE):
-        try:
-            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            return []
+        try: with open(HISTORY_FILE, "r", encoding="utf-8") as f: return json.load(f)
+        except: return []
     return []
 
 def save_history_item(menu_state):
@@ -99,65 +90,57 @@ def save_history_item(menu_state):
     st.toast("已收藏到历史", icon="✅")
 
 # Init Session
-if 'user_data' not in st.session_state:
-    st.session_state.user_data = load_user_data()
+if 'user_data' not in st.session_state: st.session_state.user_data = load_user_data()
 if 'menu_state' not in st.session_state:
     st.session_state.menu_state = {
         "breakfast": None, "lunch_meat": None, "lunch_veg": None, "lunch_soup": None,
         "dinner_meat": None, "dinner_veg": None, "dinner_soup": None, "fruit": None,
         "shopping_list": []
     }
-if 'view_mode' not in st.session_state:
-    st.session_state.view_mode = "dashboard"
-if 'focus_dish' not in st.session_state:
-    st.session_state.focus_dish = None
+if 'view_mode' not in st.session_state: st.session_state.view_mode = "dashboard"
+if 'focus_dish' not in st.session_state: st.session_state.focus_dish = None
 
 # ==========================================
-# 3. CSS 样式层 (iOS Design)
+# 3. CSS 样式层 (Mobile Header Fix)
 # ==========================================
 st.markdown("""
 <style>
     /* 全局背景 */
     .stApp { background-color: #F2F2F7; }
     h1, h2, h3, h4, p, span, div, button { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
-    #MainMenu {visibility: hidden;} footer {visibility: hidden;}
+    
+    /* ⚠️ 恢复 Header 显示，确保侧边栏箭头可见 */
+    header[data-testid="stHeader"] { background-color: transparent; }
+    /* 隐藏 footer */
+    footer {visibility: hidden;}
 
-    /* 顶部 Header */
-    .header-wrapper {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 5px 0 15px 0;
-    }
-    .header-left { display: flex; align-items: center; gap: 12px; }
-    .header-img { width: 65px; height: 65px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); object-fit: cover; }
-    .header-title { font-size: 24px; font-weight: 800; color: #1D1D1F; letter-spacing: -0.5px; }
+    /* ----------------------------------
+       顶部 Header (头像+按钮)
+       ---------------------------------- */
+    .profile-row { display: flex; align-items: center; gap: 10px; }
+    .avatar-small { width: 50px; height: 50px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover; }
+    .name-small { font-size: 20px; font-weight: 800; color: #1C1C1E; line-height: 1.2; }
     
-    /* 顶部功能图标 */
-    div[data-testid="column"] { flex: 1 !important; min-width: 0 !important; padding: 0 2px !important; }
-    
-    .icon-btn button {
+    /* 顶部图标按钮样式 */
+    .top-icon-btn button {
         border-radius: 12px !important; border: none !important;
-        height: 42px !important; width: 42px !important;
+        height: 40px !important; width: 40px !important;
         padding: 0 !important; margin: 0 auto !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
         color: white !important; font-size: 18px !important;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.15) !important;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.1) !important;
     }
-    div[data-testid="column"]:nth-of-type(2) button { background: #007AFF !important; } /* 蓝 */
-    div[data-testid="column"]:nth-of-type(3) button { background: #34C759 !important; } /* 绿 */
-    div[data-testid="column"]:nth-of-type(4) button { background: #FF9500 !important; } /* 橙 */
-
+    
     /* 生成按钮 */
     .gen-btn button {
         width: 100% !important; height: 54px !important; border-radius: 16px !important;
         background: #FF9F1C !important; color: white !important;
         font-size: 19px !important; font-weight: 700 !important; border: none !important;
         box-shadow: 0 6px 18px rgba(255, 159, 28, 0.3) !important;
-        margin-top: 10px;
-        margin-bottom: 20px;
+        margin-top: 5px;
     }
-    /* 已删除 .hint-text */
 
-    /* 菜品卡片 */
+    /* 菜品卡片 (强制不换行布局) */
     .dish-card-ios {
         background: white; border-radius: 20px; margin-bottom: 20px;
         box-shadow: 0 8px 30px rgba(0,0,0,0.04); overflow: hidden;
@@ -166,7 +149,10 @@ st.markdown("""
     .bg-orange { background: #FF9500; } .bg-blue { background: #007AFF; } .bg-purple { background: #AF52DE; }
 
     /* ★★★ 核心：一行4按钮布局 ★★★ */
-    [data-testid="stHorizontalBlock"] { gap: 0rem !important; } 
+    [data-testid="stHorizontalBlock"] { 
+        gap: 0rem !important; 
+        flex-wrap: nowrap !important; /* 强制不换行 */
+    } 
     
     .name-label { 
         font-size: 17px; font-weight: 700; color: #1D1D1F; 
@@ -254,12 +240,11 @@ def get_random_dish(pool, fridge, allergens, exclude_names=[], prefer_type=None)
     for dish in pool:
         if dish['name'] in exclude_names: continue
         
-        # 过敏原过滤
+        # 过敏原过滤 (模糊匹配)
         is_safe = True
         for ing in dish['ingredients']:
-            if any(alg in ing for alg in allergens):
-                is_safe = False
-                break
+            for alg in allergens:
+                if alg in ing: is_safe = False
         if not is_safe: continue
         
         if prefer_type == "white_meat":
@@ -328,7 +313,6 @@ def swap_dish(key, pool_key):
     exclude = [current['name']] if current else []
     
     pool = RECIPES_DB.get(pool_key, [])
-    # 容错处理
     if 'meat' in pool_key and not pool: pool = RECIPES_DB['lunch_meat']
     if 'veg' in pool_key and not pool: pool = RECIPES_DB['lunch_veg']
     
@@ -337,7 +321,6 @@ def swap_dish(key, pool_key):
         st.session_state.menu_state[key] = new_d
         update_shopping_list()
 
-# 图片生成
 def create_menu_card_image(menu, nickname):
     width, height = 800, 1200
     img = Image.new('RGB', (width, height), color='#FFFDF5')
@@ -466,38 +449,44 @@ if st.session_state.view_mode == "cook" and st.session_state.focus_dish:
 
 # 仪表盘
 else:
-    # 1. 顶部 Header
-    st.markdown(f'''
-    <div class="header-wrapper">
-        <div class="header-left">
-            <img src="https://img.icons8.com/color/480/dog.png" class="header-img">
-            <div class="header-title">Hi, {st.session_state.user_data["nickname"]}!</div>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
+    # 1. 顶部 Header (Flex布局强制并排)
+    # 使用 st.columns 结合 vertical_alignment="center" (需 Streamlit 1.31+)
+    # 头像+文字(3) | 下载(1) | 微信(1) | 计划(1)
     
-    # 2. 功能图标 (强制不换行)
-    c1, c2, c3, c4 = st.columns([6, 1.2, 1.2, 1.2])
-    with c2:
-        st.markdown('<div class="icon-btn" style="background:#007AFF !important;">', unsafe_allow_html=True)
+    c_prof, c_dl, c_wx, c_pl = st.columns([3, 1, 1, 1])
+    
+    with c_prof:
+        st.markdown(f'''
+        <div class="header-wrapper">
+            <div class="header-left">
+                <img src="https://img.icons8.com/color/480/dog.png" class="header-img">
+                <div class="header-title">Hi, {st.session_state.user_data["nickname"]}</div>
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
+        
+    with c_dl:
+        st.markdown('<div class="top-icon-btn" style="background:#007AFF !important;">', unsafe_allow_html=True)
         if st.session_state.menu_state['breakfast']:
             st.download_button("📥", data=create_menu_card_image(st.session_state.menu_state, st.session_state.user_data['nickname']), file_name="menu.png", key="dl_btn")
         else: st.button("📥", disabled=True, key="dl_btn")
         st.markdown('</div>', unsafe_allow_html=True)
-    with c3:
-        st.markdown('<div class="icon-btn" style="background:#34C759 !important;">', unsafe_allow_html=True)
-        st.button("💬", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn")
+        
+    with c_wx:
+        st.markdown('<div class="top-icon-btn" style="background:#34C759 !important;">', unsafe_allow_html=True)
+        st.button("💬", on_click=lambda: st.toast("✅ 已发送"), key="wx_btn")
         st.markdown('</div>', unsafe_allow_html=True)
-    with c4:
-        st.markdown('<div class="icon-btn" style="background:#FF9500 !important;">', unsafe_allow_html=True)
-        st.button("📅", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn")
+        
+    with c_pl:
+        st.markdown('<div class="top-icon-btn" style="background:#FF9500 !important;">', unsafe_allow_html=True)
+        st.button("📅", on_click=lambda: st.toast("📅 已生成"), key="pl_btn")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # 3. 生成按钮
     st.markdown('<div class="gen-btn">', unsafe_allow_html=True)
     if st.button("✨ 生成今日菜单", key="gen_btn"):
         with st.spinner("魔法规划中..."): time.sleep(0.5); generate_full_menu()
-    st.markdown('</div>', unsafe_allow_html=True) # 删除 hint-text
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # 4. 渲染卡片
     def render_card(title, bg_class, keys, pool_keys):
@@ -549,4 +538,4 @@ else:
             for h in load_history()[:5]:
                 st.markdown(f'<div class="hist-card"><div class="hist-head">📅 {h["date"]}</div><div class="hist-txt">🌅 {h["menu"]["breakfast"]}<br>☀️ {h["menu"]["lunch"][0]} 等</div></div>', unsafe_allow_html=True)
     else:
-        pass
+        st.info("👆 点击生成")
