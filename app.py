@@ -8,153 +8,183 @@ import os
 import io
 from PIL import Image, ImageDraw, ImageFont
 
+# 🌟 导入数据
+try:
+    from recipe_data import RECIPES_DB, FRIDGE_CATEGORIES
+except ImportError:
+    st.error("❌ 找不到 recipe_data.py！请确保文件在同一目录下。")
+    st.stop()
+
 # ==========================================
 # 1. 工程配置
 # ==========================================
 st.set_page_config(
-    page_title="Bluey美食魔法屋 v43.0",
+    page_title="Bluey美食魔法屋 v47.0",
     page_icon="🦴",
     layout="centered",
     initial_sidebar_state="auto"
 )
 
-# 路径处理
-BASE_DIR = os.path.dirname(__file__)
-def get_path(f): return os.path.join(BASE_DIR, f)
-
-# 数据库导入
-try:
-    import recipe_data
-    from recipe_data import RECIPES_DB, FRIDGE_CATEGORIES
-except ImportError:
-    st.error("❌ 找不到 recipe_data.py！请确保文件已上传。")
-    st.stop()
-
-USER_DATA_FILE = get_path("user_data.json")
-HISTORY_FILE = get_path("menu_history.json")
-FONT_FILE = get_path("SimHei.ttf")
+# 📂 文件路径
+HISTORY_FILE = "menu_history.json"
+USER_DATA_FILE = "user_data.json"
+FONT_FILE = "SimHei.ttf"
 
 # ==========================================
-# 2. 资源引擎
+# 2. 核心资源引擎
 # ==========================================
 @st.cache_resource
-def load_font_engine():
-    """下载字体，失败则使用默认"""
+def load_custom_font():
+    """下载中文字体，解决方框乱码"""
     if not os.path.exists(FONT_FILE):
         url = "https://github.com/StellarCN/scp_zh/raw/master/fonts/SimHei.ttf"
         try:
-            r = requests.get(url, timeout=15)
+            r = requests.get(url, timeout=30)
             with open(FONT_FILE, "wb") as f: f.write(r.content)
         except: return ImageFont.load_default()
     return FONT_FILE
 
 def get_pil_font(size):
-    try: return ImageFont.truetype(load_font_engine(), size)
+    try: return ImageFont.truetype(load_custom_font(), size)
     except: return ImageFont.load_default()
 
-def load_prefs():
+def load_user_data():
     default = {
-        "nickname": "Bingo", "allergens": ["牛肉", "牛奶", "奶粉"], 
-        "fridge_items": ["鸡蛋", "西红柿"], "likes": [], "dislikes": []
+        "nickname": "Bingo", "age": "2岁", "height": "90", "weight": "13",
+        "nutrition_goals": ["补钙"], "allergens": ["牛奶", "牛肉"], 
+        "fridge_items": ["鸡蛋", "西红柿", "土豆"], 
+        "pushplus_token": "", "dislikes": [], "likes": []
     }
     if os.path.exists(USER_DATA_FILE):
         try:
             with open(USER_DATA_FILE, "r", encoding="utf-8") as f:
-                saved = json.load(f); default.update(saved)
+                saved = json.load(f)
+                default.update(saved)
         except: pass
     return default
 
-def save_prefs():
+def save_user_data():
     with open(USER_DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(st.session_state.prefs, f, ensure_ascii=False, indent=2)
+        json.dump(st.session_state.user_data, f, ensure_ascii=False, indent=2)
 
-def load_hist():
+def load_history():
     if os.path.exists(HISTORY_FILE):
-        try:
-            with open(HISTORY_FILE, "r", encoding="utf-8") as f: return json.load(f)
+        try: with open(HISTORY_FILE, "r", encoding="utf-8") as f: return json.load(f)
         except: return []
     return []
 
-# 🌟 修复：统一变量名为 menu_state
-if 'prefs' not in st.session_state: st.session_state.prefs = load_prefs()
-if 'menu_state' not in st.session_state: 
-    st.session_state.menu_state = {
-        "breakfast": None, "lunch_meat": None, "lunch_veg": None, "lunch_soup": None, 
-        "dinner_meat": None, "dinner_veg": None, "dinner_soup": None, "fruit": None,
-        "shopping_list": []
+def save_history_item(menu_state):
+    history = load_history()
+    item = {
+        "date": datetime.datetime.now().strftime("%Y-%m-%d"),
+        "menu": {
+            "breakfast": menu_state['breakfast']['name'],
+            "lunch": [menu_state['lunch_meat']['name'], menu_state['lunch_veg']['name'], menu_state['lunch_soup']['name']],
+            "dinner": [menu_state['dinner_meat']['name'], menu_state['dinner_veg']['name'], menu_state['dinner_soup']['name']],
+            "fruit": menu_state['fruit']
+        }
     }
+    history.insert(0, item)
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+    st.toast("已收藏到历史", icon="✅")
+
+# Init Session
+if 'user_data' not in st.session_state: st.session_state.user_data = load_user_data()
+if 'menu_state' not in st.session_state: st.session_state.menu_state = {"breakfast": None, "lunch_meat": None, "lunch_veg": None, "lunch_soup": None, "dinner_meat": None, "dinner_veg": None, "dinner_soup": None, "fruit": None, "shopping_list": []}
 if 'view_mode' not in st.session_state: st.session_state.view_mode = "dashboard"
 if 'focus_dish' not in st.session_state: st.session_state.focus_dish = None
-if 'weekly_plan' not in st.session_state: st.session_state.weekly_plan = None
 
 # ==========================================
-# 3. CSS 样式 (iPhone 布局锁定)
+# 3. CSS 样式层 (iOS Design Pixel-Perfect)
 # ==========================================
 st.markdown("""
 <style>
+    /* 全局背景 */
     .stApp { background-color: #F2F2F7; }
     h1, h2, h3, h4, p, span, div, button { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
     #MainMenu {visibility: hidden;} footer {visibility: hidden;}
 
-    /* Header */
-    .header-box { display: flex; align-items: center; justify-content: space-between; padding: 10px 5px; margin-top: -40px; margin-bottom: 20px; }
-    .header-left { display: flex; align-items: center; gap: 15px; }
-    .avatar-img { width: 85px; height: 85px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); object-fit: cover; }
-    .header-title { font-size: 26px; font-weight: 900; color: #1C1C1E; letter-spacing: -0.5px; }
-    
-    /* 图标按钮 */
-    div[data-testid="column"] { flex: 1 !important; min-width: 0 !important; padding: 0 2px !important; }
-    .icon-btn button {
-        border-radius: 14px !important; border: none !important;
-        height: 48px !important; width: 48px !important; padding: 0 !important; margin: 0 auto !important;
-        display: flex !important; align-items: center !important; justify-content: center !important;
-        color: white !important; font-size: 20px !important; box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+    /* 顶部 Header */
+    .header-wrapper {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 5px 0 15px 0;
     }
-    div[data-testid="column"]:nth-of-type(2) button { background: #007AFF !important; }
-    div[data-testid="column"]:nth-of-type(3) button { background: #34C759 !important; }
-    div[data-testid="column"]:nth-of-type(4) button { background: #FF9500 !important; }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-img { width: 65px; height: 65px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); object-fit: cover; }
+    .header-title { font-size: 24px; font-weight: 800; color: #1D1D1F; letter-spacing: -0.5px; }
+    
+    /* 顶部功能图标 (强制覆盖 Streamlit 默认列宽) */
+    div[data-testid="column"] { flex: 1 !important; min-width: 0 !important; padding: 0 2px !important; }
+    
+    .icon-btn button {
+        border-radius: 12px !important; border: none !important;
+        height: 42px !important; width: 42px !important;
+        padding: 0 !important; margin: 0 auto !important;
+        display: flex !important; align-items: center !important; justify-content: center !important;
+        color: white !important; font-size: 18px !important;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.15) !important;
+    }
+    div[data-testid="column"]:nth-of-type(2) button { background: #007AFF !important; } /* 蓝 */
+    div[data-testid="column"]:nth-of-type(3) button { background: #34C759 !important; } /* 绿 */
+    div[data-testid="column"]:nth-of-type(4) button { background: #FF9500 !important; } /* 橙 */
 
     /* 生成按钮 */
     .gen-btn button {
-        width: 100% !important; height: 60px !important; border-radius: 20px !important;
-        background: linear-gradient(135deg, #FF9500, #FF7B00) !important;
-        color: white !important; font-size: 20px !important; font-weight: 800 !important;
-        border: none !important; box-shadow: 0 6px 20px rgba(255, 149, 0, 0.4) !important; margin-top: 15px;
+        width: 100% !important; height: 54px !important; border-radius: 16px !important;
+        background: #FF9F1C !important; color: white !important;
+        font-size: 19px !important; font-weight: 700 !important; border: none !important;
+        box-shadow: 0 6px 18px rgba(255, 159, 28, 0.3) !important;
+        margin-top: 10px;
     }
-    .hint-label { text-align: center; color: #8E8E93; font-size: 14px; margin: 10px 0 25px 0; font-weight: 600; }
+    .hint-text { text-align: center; color: #8E8E93; font-size: 13px; margin: 8px 0 20px 0; }
 
-    /* 卡片与操作行 */
-    .dish-card { background: white; border-radius: 26px; margin-bottom: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); overflow: hidden; }
-    .card-banner { padding: 14px; text-align: center; color: white; font-weight: 800; font-size: 16px; letter-spacing: 4px; }
+    /* 菜品卡片 (强制不换行布局) */
+    .dish-card-ios {
+        background: white; border-radius: 20px; margin-bottom: 20px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.04); overflow: hidden;
+    }
+    .card-banner { padding: 12px; text-align: center; color: white; font-weight: 800; font-size: 16px; letter-spacing: 3px; }
     .bg-orange { background: #FF9500; } .bg-blue { background: #007AFF; } .bg-purple { background: #AF52DE; }
 
-    /* 强制一行四列 */
+    /* ★★★ 核心：一行4按钮布局 ★★★ */
     [data-testid="stHorizontalBlock"] { gap: 0rem !important; } 
-    .dish-name { font-size: 17px; font-weight: 700; color: #1C1C1E; line-height: 2.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 10px; }
     
-    .mini-btn button {
-        background: transparent !important; border: none !important;
-        font-size: 22px !important; width: 34px !important; height: 34px !important; 
-        padding: 0 !important; margin: 0 auto !important; box-shadow: none !important; color: #8E8E93 !important;
+    .name-label { 
+        font-size: 17px; font-weight: 700; color: #1D1D1F; 
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 10px; line-height: 2.2;
     }
-    .btn-red button { color: #FF3B30 !important; transform: scale(1.15); }
-    .btn-blue button { color: #007AFF !important; font-weight: 900 !important; }
+
+    /* 迷你按钮组 */
+    .mini-icon-btn button {
+        background: transparent !important; border: none !important;
+        font-size: 20px !important; width: 32px !important; height: 32px !important; 
+        padding: 0 !important; margin: 0 auto !important;
+        box-shadow: none !important; color: #8E8E93 !important;
+    }
+    .btn-red button { color: #FF3B30 !important; transform: scale(1.1); }
+    .btn-blue button { color: #007AFF !important; transform: scale(1.1); font-weight: bold; }
 
     /* 食材条 */
-    .ing-scroll { display: flex; overflow-x: auto; gap: 8px; padding: 5px 15px 15px 15px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-    .pill { background: #F2F2F7; color: #3A3A3C; padding: 5px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .ing-scroll { 
+        display: flex; overflow-x: auto; gap: 6px; padding: 5px 15px 15px 15px; 
+        -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .pill { background: #F2F2F7; color: #3A3A3C; padding: 4px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
     .pill-hit { background: #FFF4E5; color: #FF9500; }
-    
-    /* 历史与清单 */
-    .hist-item { background: white; border-radius: 18px; padding: 18px; margin-bottom: 15px; border-left: 6px solid #FF9500; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-    .hist-date { font-weight: 800; font-size: 15px; color: #FF9500; margin-bottom: 8px; border-bottom: 1px dashed #EEE; padding-bottom: 5px; }
-    .receipt-box { background: #FFF; padding: 15px; border: 2px dashed #DDD; border-radius: 12px; font-size: 14px; text-align: center; margin-top: 20px; }
+
+    /* 历史卡片 */
+    .hist-card { background: white; border-radius: 16px; padding: 15px; margin-bottom: 10px; border-left: 5px solid #FF9500; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+    .hist-head { font-weight: 800; font-size: 14px; color: #FF9500; margin-bottom: 6px; }
+    .hist-txt { font-size: 13px; color: #3A3A3C; line-height: 1.5; }
+    .receipt-card { background: #FFF; padding: 15px; border: 1px dashed #DDD; border-radius: 10px; font-size: 14px; text-align: center; margin-top: 20px;}
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
 # 4. 业务逻辑
 # ==========================================
+
 SYNONYM_MAP = {"番茄": "西红柿", "洋柿子": "西红柿", "洋芋": "土豆", "马铃薯": "土豆", "大虾": "虾仁", "基围虾": "虾仁", "花菜": "西兰花", "圆白菜": "青菜", "白菜": "青菜", "娃娃菜": "青菜", "牛腩": "牛肉", "肥牛": "牛肉", "肉末": "猪肉", "里脊": "猪肉", "排骨": "猪肉", "鸡腿": "鸡肉", "鸡翅": "鸡肉", "龙利鱼": "鱼", "巴沙鱼": "鱼", "鳕鱼": "鱼"}
 RED_MEAT = ["牛肉", "猪肉", "排骨", "羊肉", "猪肝"]
 
@@ -162,8 +192,8 @@ def normalize_ingredient(name): return SYNONYM_MAP.get(name.strip(), name.strip(
 def mock_ocr_process(img): time.sleep(0.8); return ["西红柿", "基围虾", "娃娃菜"]
 
 def toggle_feedback(dish_name, action):
-    likes = st.session_state.prefs['likes']
-    dislikes = st.session_state.prefs['dislikes']
+    likes = st.session_state.user_data['likes']
+    dislikes = st.session_state.user_data['dislikes']
     if action == 'like':
         if dish_name in likes: likes.remove(dish_name)
         else: 
@@ -174,13 +204,13 @@ def toggle_feedback(dish_name, action):
         else:
             if dish_name not in dislikes: dislikes.append(dish_name)
             if dish_name in likes: likes.remove(dish_name)
-    save_prefs()
+    save_user_data()
 
 def restock_from_shopping_list():
     needed = st.session_state.menu_state['shopping_list']
     if needed:
-        cur = set(st.session_state.prefs['fridge_items']); cur.update(needed)
-        st.session_state.prefs['fridge_items'] = list(cur); save_prefs()
+        cur = set(st.session_state.user_data['fridge_items']); cur.update(needed)
+        st.session_state.user_data['fridge_items'] = list(cur); save_user_data()
         update_shopping_list(); st.success("已入库！"); time.sleep(0.5); st.rerun()
 
 def get_random_dish(pool, fridge, allergens, exclude_names=[], prefer_type=None):
@@ -196,29 +226,32 @@ def get_random_dish(pool, fridge, allergens, exclude_names=[], prefer_type=None)
             if any(ing in RED_MEAT for ing in d['ingredients']): continue
         
         miss = sum(1 for ing in d['ingredients'] if normalize_ingredient(ing) not in norm_fridge)
-        dc = d.copy(); dc['miss'] = miss; safe.append(dc)
+        dc = d.copy(); dc['missing_count'] = miss
+        safe.append(dc)
     
     if not safe: return None
-    tier0 = [d for d in safe if d['miss'] == 0]
-    final = tier0 if tier0 else safe
+    tier0 = [d for d in safe if d['missing_count'] == 0]
+    tier1 = [d for d in safe if d['missing_count'] == 1]
+    tier2 = [d for d in safe if d['missing_count'] > 1]
+    final_pool = tier0 if tier0 else (tier1 if tier1 else tier2)
     
-    likes = st.session_state.prefs['likes']
-    dislikes = st.session_state.prefs['dislikes']
+    likes = st.session_state.user_data['likes']
+    dislikes = st.session_state.user_data['dislikes']
     weighted = []
     for d in final:
         score = 10
-        if d.get('miss') == 0: score += 50
+        if d.get('missing_count') == 0: score += 50
         if d['name'] in likes: score += 100
         if d['name'] in dislikes: score = 1
         weighted.extend([d] * score)
     return random.choice(weighted) if weighted else None
 
-def generate_menu():
-    u = st.session_state.prefs; ms = st.session_state.menu_state
-    ms['breakfast'] = get_random_dish(RECIPES_DB['breakfast'], u['fridge_items'], u['allergens'])
-    ms['lunch_meat'] = get_random_dish(RECIPES_DB['lunch_meat'], u['fridge_items'], u['allergens'])
-    ms['lunch_veg'] = get_random_dish(RECIPES_DB['lunch_veg'], u['fridge_items'], u['allergens'])
-    ms['lunch_soup'] = get_random_dish(RECIPES_DB['soup'], u['fridge_items'], u['allergens'])
+def generate_full_menu():
+    fridge = st.session_state.user_data['fridge_items']; allergies = st.session_state.user_data['allergens']; ms = st.session_state.menu_state
+    ms['breakfast'] = get_random_dish(RECIPES_DB['breakfast'], fridge, allergies)
+    ms['lunch_meat'] = get_random_dish(RECIPES_DB['lunch_meat'], fridge, allergies)
+    ms['lunch_veg'] = get_random_dish(RECIPES_DB['lunch_veg'], fridge, allergies)
+    ms['lunch_soup'] = get_random_dish(RECIPES_DB['soup'], fridge, allergies)
     
     lunch_ings = ms['lunch_meat']['ingredients'] if ms['lunch_meat'] else []
     is_red = any(normalize_ingredient(i) in RED_MEAT for i in lunch_ings)
@@ -226,14 +259,14 @@ def generate_menu():
     pool_dv = RECIPES_DB.get('dinner_veg', []) or RECIPES_DB['lunch_veg']
     pref = "white_meat" if is_red else None
     
-    ms['dinner_meat'] = get_random_dish(pool_dm, u['fridge_items'], u['allergens'], [ms['lunch_meat']['name']], pref) or get_random_dish(pool_dm, u['fridge_items'], u['allergens'], [ms['lunch_meat']['name']])
-    ms['dinner_veg'] = get_random_dish(pool_dv, u['fridge_items'], u['allergens'])
-    ms['dinner_soup'] = get_random_dish(RECIPES_DB['soup'], u['fridge_items'], u['allergens'], [ms['lunch_soup']['name']])
+    ms['dinner_meat'] = get_random_dish(pool_dm, fridge, allergies, [ms['lunch_meat']['name']], pref) or get_random_dish(pool_dm, fridge, allergies, [ms['lunch_meat']['name']])
+    ms['dinner_veg'] = get_random_dish(pool_dv, fridge, allergies)
+    ms['dinner_soup'] = get_random_dish(RECIPES_DB['soup'], fridge, allergies, [ms['lunch_soup']['name']])
     ms['fruit'] = random.choice(RECIPES_DB['fruit'])
     update_shopping_list(); st.session_state.view_mode = "dashboard"
 
 def update_shopping_list():
-    norm_fridge = set([normalize_ingredient(i) for i in st.session_state.prefs['fridge_items']])
+    norm_fridge = set([normalize_ingredient(i) for i in st.session_state.user_data['fridge_items']])
     needed = set()
     ms = st.session_state.menu_state
     for k, d in ms.items():
@@ -243,14 +276,12 @@ def update_shopping_list():
     st.session_state.menu_state['shopping_list'] = list(needed)
 
 def swap_dish(key, pool_key):
-    u = st.session_state.prefs
+    fridge = st.session_state.user_data['fridge_items']; allergies = st.session_state.user_data['allergens']
     curr = st.session_state.menu_state[key]; exclude = [curr['name']] if curr else []
     pool = RECIPES_DB.get(pool_key, [])
-    # 容错：晚餐池为空时回退
     if 'meat' in pool_key and not pool: pool = RECIPES_DB['lunch_meat']
     if 'veg' in pool_key and not pool: pool = RECIPES_DB['lunch_veg']
-    
-    new_d = get_random_dish(pool, u['fridge_items'], u['allergens'], exclude)
+    new_d = get_random_dish(pool, fridge, allergies, exclude)
     if new_d: st.session_state.menu_state[key] = new_d; update_shopping_list()
 
 def create_menu_card_image(menu, nickname):
@@ -277,46 +308,42 @@ def generate_weekly(): st.toast("✅ 周计划已生成")
 def enter_cook_mode(dish): st.session_state.focus_dish = dish; st.session_state.view_mode = "cook"
 def exit_cook_mode(): st.session_state.view_mode = "dashboard"
 
-def save_history_item(menu_state):
-    history = load_history()
-    item = {
-        "date": datetime.datetime.now().strftime("%Y-%m-%d"),
-        "menu": {
-            "breakfast": menu_state['breakfast']['name'],
-            "lunch": [menu_state['lunch_meat']['name'], menu_state['lunch_veg']['name'], menu_state['lunch_soup']['name']],
-            "dinner": [menu_state['dinner_meat']['name'], menu_state['dinner_veg']['name'], menu_state['dinner_soup']['name']],
-            "fruit": menu_state['fruit']
-        }
-    }
-    history.insert(0, item)
-    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(history, f, ensure_ascii=False, indent=2)
-    st.toast("✅ 已收藏", icon="❤️")
-
 # ==========================================
-# 5. UI 渲染 (Dashboard)
+# 5. UI 渲染 (View)
 # ==========================================
 
 # 侧边栏
 with st.sidebar:
-    st.image("https://img.icons8.com/color/480/dog.png", width=100)
-    with st.expander("👤 档案与过敏原", expanded=True):
-        u = st.session_state.prefs
+    # 修复：使用更稳定的图片源，避免某些网络下头像加载失败
+    st.image("https://upload.wikimedia.org/wikipedia/en/1/17/Bluey_Heeler.png", width=80)
+    
+    with st.expander("📝 档案设置 (含过敏原)", expanded=True):
+        u = st.session_state.user_data
         u['nickname'] = st.text_input("昵称", u['nickname'])
-        common = ["牛肉", "牛奶", "奶粉", "鸡蛋", "虾", "鱼"]
-        al = st.multiselect("过敏原过滤", common, default=[x for x in u['allergens'] if x in common])
-        custom = st.text_input("自定义过敏")
-        if st.button("💾 保存档案"):
-            if custom: al.extend([x.strip() for x in custom.split(',')])
-            u['allergens'] = list(set(al)); save_prefs(); st.success("已保存")
+        c1, c2 = st.columns(2)
+        st.session_state.user_data['height'] = c1.text_input("身高", st.session_state.user_data.get('height',''))
+        st.session_state.user_data['weight'] = c2.text_input("体重", st.session_state.user_data.get('weight',''))
+        
+        st.markdown("**🚫 过敏原 (自动过滤)**")
+        default_al = ["牛奶", "奶粉", "牛肉", "鸡蛋", "虾", "鱼", "花生", "麦麸"]
+        cur_al = st.session_state.user_data.get('allergens', [])
+        sel_al = st.multiselect("选择", default_al, default=[x for x in cur_al if x in default_al])
+        cust_al = st.text_input("其他 (逗号分隔)", value=",".join([x for x in cur_al if x not in default_al]))
+        
+        st.session_state.user_data['pushplus_token'] = st.text_input("Token", st.session_state.user_data['pushplus_token'], type="password")
+        if st.button("保存档案"):
+            final = sel_al
+            if cust_al: final.extend([x.strip() for x in cust_al.split(',') if x.strip()])
+            st.session_state.user_data['allergens'] = list(set(final))
+            save_user_data(); st.success("已保存")
 
     with st.expander("🧊 冰箱管理"):
         img = st.camera_input("拍照", label_visibility="collapsed")
         if img: 
-            items = mock_ocr_process(img); cur = set(st.session_state.prefs['fridge_items']); cur.update(items)
-            st.session_state.prefs['fridge_items'] = list(cur); save_prefs(); st.rerun()
+            items = mock_ocr_process(img); cur = set(st.session_state.user_data['fridge_items']); cur.update(items)
+            st.session_state.user_data['fridge_items'] = list(cur); save_user_data(); st.rerun()
         
-        cur_f = st.session_state.prefs['fridge_items']
+        cur_f = st.session_state.user_data['fridge_items']
         new_f_std = []
         for c, l in FRIDGE_CATEGORIES.items():
             st.markdown(f"**{c}**")
@@ -330,12 +357,13 @@ with st.sidebar:
         if st.button("更新库存"):
             final = new_f_std + kept_cust
             if new_in: final.extend([x.strip() for x in new_in.split(',') if x.strip()])
-            st.session_state.prefs['fridge_items'] = list(set(final)); save_prefs(); st.rerun()
+            st.session_state.user_data['fridge_items'] = list(set(final))
+            save_user_data(); st.rerun()
 
 # 烹饪模式
 if st.session_state.view_mode == "cook" and st.session_state.focus_dish:
     d = st.session_state.focus_dish
-    st.button("⬅️ 返回菜单", on_click=exit_cook_mode)
+    st.button("⬅️ 返回", on_click=exit_cook_mode)
     st.markdown(f"""
     <div style="background:white; border-radius:20px; padding:20px; margin-top:10px;">
         <h2 style="text-align:center;">{d['name']}</h2>
@@ -348,64 +376,72 @@ if st.session_state.view_mode == "cook" and st.session_state.focus_dish:
 
 # 仪表盘
 else:
-    # Header
-    st.markdown(f'''<div class="header-wrapper"><div class="header-left"><img src="https://img.icons8.com/color/480/dog.png" class="header-img"><div class="header-title">Hi, {st.session_state.prefs["nickname"]}!</div></div></div>''', unsafe_allow_html=True)
+    # 1. Header
+    st.markdown(f'''
+    <div class="header-wrapper">
+        <div class="header-left">
+            <img src="https://upload.wikimedia.org/wikipedia/en/1/17/Bluey_Heeler.png" class="header-img">
+            <div class="header-title">Hi, {st.session_state.user_data["nickname"]}!</div>
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
     
-    # Icons
+    # 2. Icons
     c1, c2, c3, c4 = st.columns([6, 1.2, 1.2, 1.2])
     with c2:
-        st.markdown('<div class="icon-btn">', unsafe_allow_html=True)
+        st.markdown('<div class="icon-btn" style="background:#007AFF !important;">', unsafe_allow_html=True)
         if st.session_state.menu_state['breakfast']:
-            st.download_button("📥", data=create_menu_card_image(st.session_state.menu_state, st.session_state.prefs['nickname']), file_name="menu.png", key="dl_btn")
+            st.download_button("📥", data=create_menu_card_image(st.session_state.menu_state, st.session_state.user_data['nickname']), file_name="menu.png", key="dl_btn")
         else: st.button("📥", disabled=True, key="dl_btn")
         st.markdown('</div>', unsafe_allow_html=True)
     with c3:
-        st.markdown('<div class="icon-btn">', unsafe_allow_html=True)
+        st.markdown('<div class="icon-btn" style="background:#34C759 !important;">', unsafe_allow_html=True)
         st.button("💬", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn")
         st.markdown('</div>', unsafe_allow_html=True)
     with c4:
-        st.markdown('<div class="icon-btn">', unsafe_allow_html=True)
+        st.markdown('<div class="icon-btn" style="background:#FF9500 !important;">', unsafe_allow_html=True)
         st.button("📅", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Generate
+    # 3. Gen Button
     st.markdown('<div class="gen-btn">', unsafe_allow_html=True)
     if st.button("✨ 生成今日菜单", key="gen_btn"):
-        with st.spinner("魔法规划中..."): time.sleep(0.5); generate_menu()
+        with st.spinner("魔法规划中..."): time.sleep(0.5); generate_full_menu()
     st.markdown('</div><div class="hint-text">👆 点击生成</div>', unsafe_allow_html=True)
 
-    # Card Render
+    # 4. Cards (Strict 4-col)
     def render_card(title, bg_class, keys, pool_keys):
         st.markdown(f'<div class="dish-card-ios"><div class="card-banner {bg_class}">{title}</div>', unsafe_allow_html=True)
         for idx, k in enumerate(keys):
             d = st.session_state.menu_state[k]
             if not d: continue
-            is_l = d['name'] in st.session_state.prefs['likes']
+            is_l = d['name'] in st.session_state.user_data['likes']
+            is_d = d['name'] in st.session_state.user_data['dislikes']
             
-            # Row Layout
-            cn, b1, b2, b3, b4 = st.columns([3.5, 1.5, 1.5, 1.5, 1.5])
-            with cn: st.markdown(f'<div class="dish-label">{d["name"]}</div>', unsafe_allow_html=True)
-            with b1: 
+            c_n, c_b1, c_b2, c_b3, c_b4 = st.columns([3.5, 1.2, 1.2, 1.2, 1.2])
+            with c_n: st.markdown(f'<div class="name-label">{d["name"]}</div>', unsafe_allow_html=True)
+            with c_b1: 
                 st.markdown(f'<div class="mini-icon-btn {"btn-red" if is_l else ""}">', unsafe_allow_html=True)
                 if st.button("❤️" if is_l else "🙂", key=f"lk_{k}"): toggle_feedback(d['name'], 'like'); st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
-            with b2:
+            with c_b2:
                 st.markdown('<div class="mini-icon-btn">', unsafe_allow_html=True)
-                if st.button("😐", key=f"dl_{k}"): toggle_feedback(d['name'], 'dislike'); st.rerun()
+                label = "⚫" if is_d else "😐"
+                if st.button(label, key=f"dl_{k}"): toggle_feedback(d['name'], 'dislike'); st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
-            with b3:
+            with c_b3:
                 st.markdown('<div class="mini-icon-btn btn-blue">', unsafe_allow_html=True)
                 if st.button("🍳", key=f"ck_{k}"): enter_cook_mode(d); st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
-            with b4:
+            with c_b4:
                 st.markdown('<div class="mini-icon-btn">', unsafe_allow_html=True)
                 if st.button("🔄", key=f"sw_{k}"): swap_dish(k, pool_keys[idx]); st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
             
-            nf = [normalize_ingredient(i) for i in st.session_state.prefs['fridge_items']]
+            nf = [normalize_ingredient(i) for i in st.session_state.user_data['fridge_items']]
             ing_html = "".join([f'<span class="pill {"pill-hit" if normalize_ingredient(i) in nf else ""}">{i}</span>' for i in d['ingredients']])
             st.markdown(f'<div class="ing-scroll">{ing_html}</div>', unsafe_allow_html=True)
-            if k != keys[-1]: st.markdown("<hr style='margin:0 15px; border:0; border-top:1px solid #F0F0F0;'>", unsafe_allow_html=True)
+            if k != keys[-1]: st.markdown("<hr style='margin:0 15px; border:0; border-top:1px solid #F2F2F7;'>", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.menu_state['breakfast']:
