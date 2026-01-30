@@ -167,15 +167,32 @@ st.markdown("""
             line-height: 1.5;
         }
         
-        /* 移动端：操作按钮更大，使用容器宽度 */
+        /* 移动端：操作按钮 - 只显示图标，无边框 */
+        .action-btn {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+        }
         .action-btn button {
-            width: 100% !important;
-            height: 44px !important;
-            font-size: 20px !important;
-            border-radius: 10px !important;
+            background: transparent !important;
+            border: none !important;
+            width: 40px !important;
+            height: 40px !important;
+            font-size: 22px !important;
+            border-radius: 50% !important;
+            padding: 0 !important;
+            margin: 0 auto !important;
+            box-shadow: none !important;
+            min-width: 40px !important;
+            flex-shrink: 0 !important;
         }
         .action-btn button:hover {
-            background: #F2F2F7 !important;
+            background: rgba(242, 242, 247, 0.5) !important;
+        }
+        
+        /* 移动端：确保列布局紧凑 */
+        div[data-testid="column"] {
+            padding: 0 2px !important;
         }
         
         /* 移动端：卡片内边距调整 */
@@ -260,16 +277,32 @@ st.markdown("""
         padding-left: 5px; line-height: 2.2;
     }
 
-    /* 通用操作按钮 (圆形无框) */
-    .action-btn button {
-        background: transparent !important; border: none !important; 
-        width: 32px !important; height: 32px !important; padding: 0 !important;
-        font-size: 18px !important; color: #8E8E93 !important;
-        box-shadow: none !important; margin: 0 auto !important;
-        display: flex !important; align-items: center !important; justify-content: center !important;
-        border-radius: 50% !important;
+    /* 通用操作按钮 (圆形无框) - 只显示图标 */
+    .action-btn {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
     }
-    .action-btn button:hover { background: #F2F2F7 !important; }
+    .action-btn button {
+        background: transparent !important; 
+        border: none !important; 
+        width: 36px !important; 
+        height: 36px !important; 
+        padding: 0 !important;
+        font-size: 20px !important; 
+        color: #8E8E93 !important;
+        box-shadow: none !important; 
+        margin: 0 auto !important;
+        display: flex !important; 
+        align-items: center !important; 
+        justify-content: center !important;
+        border-radius: 50% !important;
+        min-width: 36px !important;
+        flex-shrink: 0 !important;
+    }
+    .action-btn button:hover { 
+        background: rgba(242, 242, 247, 0.6) !important; 
+    }
     
     /* 状态高亮 */
     .btn-liked button { color: #FF3B30 !important; transform: scale(1.1); }
@@ -550,32 +583,32 @@ else:
             # 移动端：菜名单独一行，按钮在下一行
             st.markdown(f'<div class="dish-name-text">{d["name"]}</div>', unsafe_allow_html=True)
             
-            # 4按钮组 [爱] [不爱] [做法] [换] - 移动端自动调整
+            # 4按钮组 [爱] [不爱] [做法] [换] - 只显示图标，无边框
             b1, b2, b3, b4 = st.columns([1, 1, 1, 1], gap="small")
             with b1: # 喜欢
                 st.markdown('<div class="action-btn">', unsafe_allow_html=True)
                 label = "🙂"
                 if is_liked: label = "❤️"
                 cls = "btn-liked" if is_liked else ""
-                if st.button(label, key=f"lk_{key}", use_container_width=True): toggle_feedback(d['name'], 'like'); st.rerun()
+                if st.button(label, key=f"lk_{key}"): toggle_feedback(d['name'], 'like'); st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
             with b2: # 不喜欢
                 st.markdown('<div class="action-btn">', unsafe_allow_html=True)
                 label = "😐"
                 if is_disliked: label = "⚫"
                 cls = "btn-disliked" if is_disliked else ""
-                if st.button(label, key=f"dl_{key}", use_container_width=True): toggle_feedback(d['name'], 'dislike'); st.rerun()
+                if st.button(label, key=f"dl_{key}"): toggle_feedback(d['name'], 'dislike'); st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
             with b3: # 做法 (图标)
                 st.markdown('<div class="action-btn cook-btn-small">', unsafe_allow_html=True)
-                if st.button("🍳", key=f"ck_{key}", help="做法", use_container_width=True):
+                if st.button("🍳", key=f"ck_{key}", help="做法"):
                     st.session_state.focus_dish = d
                     st.session_state.view_mode = "cook"
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
             with b4: # 换菜
                 st.markdown('<div class="action-btn">', unsafe_allow_html=True)
-                if st.button("🔄", key=f"sw_{key}", use_container_width=True): swap_dish(key, pool_keys[idx]); st.rerun()
+                if st.button("🔄", key=f"sw_{key}"): swap_dish(key, pool_keys[idx]); st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
 
             # Row 2: 食材条
