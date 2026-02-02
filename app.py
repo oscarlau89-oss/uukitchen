@@ -980,125 +980,91 @@ else:
         </div>
         ''', unsafe_allow_html=True)
     
-    # 下载、推送、计划图标 - 使用纯HTML/CSS布局，完全控制间距
-    # 创建隐藏的Streamlit按钮用于触发功能（使用CSS隐藏）
-    if st.session_state.menu_state['breakfast']:
-        st.download_button("", data=create_menu_card_image(st.session_state.menu_state, st.session_state.user_data['nickname']), file_name="menu.png", key="dl_btn_hidden", use_container_width=False)
-    else:
-        st.button("", disabled=True, key="dl_btn_hidden", use_container_width=False)
-    
-    st.button("", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn_hidden", use_container_width=False)
-    st.button("", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn_hidden", use_container_width=False)
-    
-    # 使用HTML创建图标布局
-    st.markdown('''
-    <div class="icon-row-top">
-        <button class="icon-btn-top" onclick="triggerStreamlitButton('dl_btn_hidden')">
-            <span class="icon-emoji">📥</span>
-        </button>
-        <button class="icon-btn-top" onclick="triggerStreamlitButton('wx_btn_hidden')">
-            <span class="icon-emoji">💬</span>
-        </button>
-        <button class="icon-btn-top" onclick="triggerStreamlitButton('pl_btn_hidden')">
-            <span class="icon-emoji">📅</span>
-        </button>
-    </div>
-    <script>
-    // 全局函数：触发Streamlit隐藏按钮
-    function triggerStreamlitButton(key) {
-        // 方法1: 通过aria-label查找
-        let btn = Array.from(document.querySelectorAll('button[data-testid="baseButton-secondary"], button[data-testid="baseButton-download"]')).find(b => {
-            const label = b.getAttribute('aria-label') || '';
-            return label.includes(key);
-        });
-        
-        // 方法2: 如果找不到，尝试通过父元素查找
-        if (!btn) {
-            const allBtns = Array.from(document.querySelectorAll('button'));
-            btn = allBtns.find(b => {
-                const parent = b.closest('[data-testid]');
-                if (parent) {
-                    const parentLabel = parent.getAttribute('aria-label') || '';
-                    return parentLabel.includes(key);
-                }
-                return false;
-            });
-        }
-        
-        // 方法3: 通过最近的隐藏按钮（按顺序查找）
-        if (!btn) {
-            const hiddenBtns = Array.from(document.querySelectorAll('button[data-testid="baseButton-secondary"]')).filter(b => !b.textContent.trim());
-            const keyIndex = ['dl_btn_hidden', 'wx_btn_hidden', 'pl_btn_hidden'].indexOf(key);
-            if (keyIndex >= 0 && hiddenBtns[keyIndex]) {
-                btn = hiddenBtns[keyIndex];
-            }
-        }
-        
-        if (btn) {
-            btn.click();
-            return true;
-        }
-        console.warn('Button not found for key:', key);
-        return false;
-    }
-    </script>
-    ''', unsafe_allow_html=True)
+    # 2. 顶部三个图标（下载 / 推送 / 计划）——直接使用 Streamlit 按钮，避免复杂 HTML+JS
+    col_dl, col_wx, col_pl = st.columns(3)
+    with col_dl:
+        if st.session_state.menu_state['breakfast']:
+            st.download_button(
+                "📥",
+                data=create_menu_card_image(
+                    st.session_state.menu_state,
+                    st.session_state.user_data['nickname']
+                ),
+                file_name="menu.png",
+                key="dl_btn",
+                use_container_width=True,
+            )
+        else:
+            st.button("📥", disabled=True, key="dl_btn_disabled", use_container_width=True)
+    with col_wx:
+        st.button("💬", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn", use_container_width=True)
+    with col_pl:
+        st.button("📅", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn", use_container_width=True)
 
     # 3. 生成按钮（美观整洁，居中显示）
-    # 使用HTML包装确保居中，减小上方留白
-    st.markdown('''
-    <div style="display: flex; justify-content: center; align-items: center; margin: 2px 0 8px 0; padding: 0; width: 100%;">
-    ''', unsafe_allow_html=True)
+    st.markdown(
+        '''
+        <div style="display: flex; justify-content: center; align-items: center; margin: 2px 0 8px 0; padding: 0; width: 100%;">
+        ''',
+        unsafe_allow_html=True,
+    )
     if st.button("✨ 生成今日菜单", key="gen_btn", use_container_width=False):
-        with st.spinner("魔法规划中..."): time.sleep(0.5); generate_full_menu()
+        with st.spinner("魔法规划中..."):
+            time.sleep(0.5)
+            generate_full_menu()
     st.markdown('</div>', unsafe_allow_html=True)
 
     # 4. 渲染卡片
     def render_card(title, bg_class, keys, pool_keys):
-        st.markdown(f'<div class="dish-card"><div class="card-banner {bg_class}">{title}</div>', unsafe_allow_html=True)
+        # 卡片外层
+        st.markdown(
+            f'<div class="dish-card"><div class="card-banner {bg_class}">{title}</div>',
+            unsafe_allow_html=True,
+        )
         for idx, k in enumerate(keys):
             d = st.session_state.menu_state[k]
-            if not d: continue
+            if not d:
+                continue
             is_l = d['name'] in st.session_state.user_data['likes']
             is_dl = d['name'] in st.session_state.user_data['dislikes']
-            
+
             # 菜名单独一行
             st.markdown(f'<div class="dish-label">{d["name"]}</div>', unsafe_allow_html=True)
-            
-            # 创建隐藏的Streamlit按钮用于触发功能（使用CSS隐藏）
-            if st.button("", key=f"lk_{k}_hidden", use_container_width=False): 
-                toggle_feedback(d['name'], 'like'); st.rerun()
-            if st.button("", key=f"dl_{k}_hidden", use_container_width=False): 
-                toggle_feedback(d['name'], 'dislike'); st.rerun()
-            if st.button("", key=f"ck_{k}_hidden", use_container_width=False): 
-                enter_cook_mode(d); st.rerun()
-            if st.button("", key=f"sw_{k}_hidden", use_container_width=False): 
-                swap_dish(k, pool_keys[idx]); st.rerun()
-            
-            # 使用HTML创建图标布局 - 4个图标紧密排列
-            like_icon = "❤️" if is_l else "🙂"
-            dislike_icon = "⚫" if is_dl else "😐"
-            st.markdown(f'''
-            <div class="icon-row-dish">
-                <button class="icon-btn-dish icon-like" onclick="triggerStreamlitButton('lk_{k}_hidden')">
-                    <span class="icon-emoji">{like_icon}</span>
-                </button>
-                <button class="icon-btn-dish icon-dislike" onclick="triggerStreamlitButton('dl_{k}_hidden')">
-                    <span class="icon-emoji">{dislike_icon}</span>
-                </button>
-                <button class="icon-btn-dish icon-cook" onclick="triggerStreamlitButton('ck_{k}_hidden')">
-                    <span class="icon-emoji">🍳</span>
-                </button>
-                <button class="icon-btn-dish icon-swap" onclick="triggerStreamlitButton('sw_{k}_hidden')">
-                    <span class="icon-emoji">🔄</span>
-                </button>
-            </div>
-            ''', unsafe_allow_html=True)
-            
+
+            # 四个图标按钮在菜名下面，直接使用 Streamlit 按钮，通过 CSS 控制紧凑外观
+            b1, b2, b3, b4 = st.columns(4)
+            with b1:
+                if st.button("❤️" if is_l else "🙂", key=f"lk_{k}", use_container_width=True):
+                    toggle_feedback(d['name'], 'like')
+                    st.rerun()
+            with b2:
+                label = "⚫" if is_dl else "😐"
+                if st.button(label, key=f"dl_{k}", use_container_width=True):
+                    toggle_feedback(d['name'], 'dislike')
+                    st.rerun()
+            with b3:
+                if st.button("🍳", key=f"ck_{k}", use_container_width=True):
+                    enter_cook_mode(d)
+                    st.rerun()
+            with b4:
+                if st.button("🔄", key=f"sw_{k}", use_container_width=True):
+                    swap_dish(k, pool_keys[idx])
+                    st.rerun()
+
+            # 食材标签
             nf = [normalize_ingredient(i) for i in st.session_state.user_data['fridge_items']]
-            ing_html = "".join([f'<span class="pill {"pill-hit" if normalize_ingredient(i) in nf else ""}">{i}</span>' for i in d['ingredients']])
+            ing_html = "".join(
+                [
+                    f'<span class="pill {"pill-hit" if normalize_ingredient(i) in nf else ""}">{i}</span>'
+                    for i in d['ingredients']
+                ]
+            )
             st.markdown(f'<div class="ing-scroll">{ing_html}</div>', unsafe_allow_html=True)
-            if k != keys[-1]: st.markdown("<hr style='margin:0 15px; border:0; border-top:1px solid #F0F0F0;'>", unsafe_allow_html=True)
+            if k != keys[-1]:
+                st.markdown(
+                    "<hr style='margin:0 15px; border:0; border-top:1px solid #F0F0F0;'>",
+                    unsafe_allow_html=True,
+                )
         st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.menu_state['breakfast']:
