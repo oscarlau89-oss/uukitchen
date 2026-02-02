@@ -6,6 +6,7 @@ import datetime
 import json
 import os
 import io
+import base64
 from PIL import Image, ImageDraw, ImageFont
 
 # 🌟 导入数据
@@ -30,6 +31,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(BASE_DIR, "menu_history.json")
 USER_DATA_FILE = os.path.join(BASE_DIR, "user_data.json")
 FONT_FILE = os.path.join(BASE_DIR, "SimHei.ttf")
+# 头像图片路径（支持多种格式和文件名）
+AVATAR_FILE = None
+for filename in ["bluey.png", "bluey.jpg", "bluey.jpeg", "avatar.png", "avatar.jpg", "头像.png", "头像.jpg"]:
+    path = os.path.join(BASE_DIR, filename)
+    if os.path.exists(path):
+        AVATAR_FILE = path
+        break
 
 # ==========================================
 # 2. 核心资源引擎
@@ -500,18 +508,15 @@ def exit_cook_mode():
 
 # 侧边栏
 with st.sidebar:
-    # 使用真实的布鲁伊头像
-    bluey_sidebar_urls = [
-        "https://static.wikia.nocookie.net/bluey/images/4/4e/Bluey_Heeler.png/revision/latest/scale-to-width-down/200?cb=20210801071234",
-        "https://upload.wikimedia.org/wikipedia/en/1/17/Bluey_Heeler.png"
-    ]
-    try:
-        st.image(bluey_sidebar_urls[0], width=80, use_container_width=False)
-    except:
+    # 使用本地图片作为头像
+    if AVATAR_FILE and os.path.exists(AVATAR_FILE):
         try:
-            st.image(bluey_sidebar_urls[1], width=80, use_container_width=False)
+            st.image(AVATAR_FILE, width=80, use_container_width=False)
         except:
             st.markdown('<div style="width:80px;height:80px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;margin:0 auto;box-shadow:0 2px 8px rgba(0,0,0,0.1);line-height:1;">🦴</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div style="width:80px;height:80px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;margin:0 auto;box-shadow:0 2px 8px rgba(0,0,0,0.1);line-height:1;">🦴</div>', unsafe_allow_html=True)
+        st.caption("💡 请将头像图片命名为 bluey.png 放在项目目录中")
     
     with st.expander("📝 档案设置 (含过敏原)", expanded=True):
         u = st.session_state.user_data
@@ -586,40 +591,35 @@ else:
     c_prof, c_dl, c_wx, c_pl = st.columns([5, 1.2, 1.2, 1.2], gap="small")
     
     with c_prof:
-        # 使用真实的布鲁伊头像，多个备用URL确保显示
-        bluey_avatar_urls = [
-            "https://static.wikia.nocookie.net/bluey/images/4/4e/Bluey_Heeler.png/revision/latest/scale-to-width-down/200?cb=20210801071234",
-            "https://upload.wikimedia.org/wikipedia/en/1/17/Bluey_Heeler.png",
-            "https://www.pngall.com/wp-content/uploads/2023/04/Bluey-PNG-Image.png"
-        ]
-        st.markdown(f'''
-        <div class="header-box">
-            <img src="{bluey_avatar_urls[0]}" 
-                 class="avatar-img" 
-                 alt="Bluey"
-                 style="object-fit: cover; background: linear-gradient(135deg, #FF9500, #FF7B00);">
-            <div style="width:50px;height:50px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:28px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.1);flex-shrink:0;" id="bluey-fallback">🦴</div>
-            <div class="header-title">Hi, {st.session_state.user_data["nickname"]}</div>
-        </div>
-        <script>
-        (function() {{
-            var img = document.querySelector('.header-box .avatar-img');
-            var fallback = document.getElementById('bluey-fallback');
-            if (img) {{
-                img.addEventListener('error', function() {{
-                    if (this.src === '{bluey_avatar_urls[0]}') {{
-                        this.src = '{bluey_avatar_urls[1]}';
-                    }} else if (this.src === '{bluey_avatar_urls[1]}') {{
-                        this.src = '{bluey_avatar_urls[2]}';
-                    }} else {{
-                        this.style.display = 'none';
-                        if (fallback) fallback.style.display = 'flex';
-                    }}
-                }});
-            }}
-        }})();
-        </script>
-        ''', unsafe_allow_html=True)
+        # 使用本地图片作为头像
+        if AVATAR_FILE and os.path.exists(AVATAR_FILE):
+            # 将本地图片转换为base64编码，以便在HTML中使用
+            with open(AVATAR_FILE, "rb") as img_file:
+                img_data = base64.b64encode(img_file.read()).decode()
+                img_ext = os.path.splitext(AVATAR_FILE)[1].lower().replace('.', '')
+                img_mime = f"image/{img_ext}" if img_ext in ['png', 'jpg', 'jpeg'] else "image/png"
+                img_src = f"data:{img_mime};base64,{img_data}"
+        else:
+            # 如果本地图片不存在，使用emoji备用
+            img_src = None
+        
+        if img_src:
+            st.markdown(f'''
+            <div class="header-box">
+                <img src="{img_src}" 
+                     class="avatar-img" 
+                     alt="Bluey"
+                     style="object-fit: cover; background: linear-gradient(135deg, #FF9500, #FF7B00);">
+                <div class="header-title">Hi, {st.session_state.user_data["nickname"]}</div>
+            </div>
+            ''', unsafe_allow_html=True)
+        else:
+            st.markdown(f'''
+            <div class="header-box">
+                <div style="width:50px;height:50px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.1);flex-shrink:0;">🦴</div>
+                <div class="header-title">Hi, {st.session_state.user_data["nickname"]}</div>
+            </div>
+            ''', unsafe_allow_html=True)
     
     with c_dl:
         st.markdown('<div class="icon-btn" style="background:#007AFF !important;">', unsafe_allow_html=True)
