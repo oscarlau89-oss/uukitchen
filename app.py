@@ -504,15 +504,23 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* 4. 生成按钮 (美观整洁，居中) */
-    .gen-btn {
+    /* 4. 生成按钮 (美观整洁，居中) - 使用更强制性的选择器 */
+    .gen-btn,
+    div:has(button[key="gen_btn"]),
+    .element-container:has(button[key="gen_btn"]) {
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        margin: 8px 0 !important;
+        margin: 5px 0 !important;
         padding: 0 !important;
+        width: 100% !important;
     }
-    .gen-btn button {
+    .gen-btn button,
+    button[key="gen_btn"],
+    button[key="gen_btn"][kind="primary"],
+    button[key="gen_btn"][kind="secondary"],
+    div:has(button[key="gen_btn"]) button,
+    .element-container:has(button[key="gen_btn"]) button {
         width: auto !important;
         min-width: 200px !important;
         max-width: 90% !important;
@@ -531,9 +539,33 @@ st.markdown("""
         justify-content: center !important;
         transition: all 0.2s ease !important;
     }
-    .gen-btn button:hover {
+    .gen-btn button:hover,
+    button[key="gen_btn"]:hover {
         transform: translateY(-1px) !important;
         box-shadow: 0 6px 16px rgba(255, 159, 28, 0.35) !important;
+    }
+    /* 确保生成按钮的容器居中 - 使用更具体的选择器 */
+    div:has(button[key="gen_btn"]),
+    .element-container:has(button[key="gen_btn"]),
+    div:has(button[key="gen_btn"]) > div,
+    [data-testid="stButton"]:has(button[key="gen_btn"]) {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    /* 确保生成按钮的容器居中 */
+    div:has(button[key="gen_btn"]),
+    .element-container:has(button[key="gen_btn"]),
+    div:has(button[key="gen_btn"]) > div {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
     }
 
     /* 5. 菜品卡片 (紧凑) */
@@ -925,7 +957,7 @@ else:
     # 下载、推送、计划图标在第二行，紧密排列，去掉边框
     # 使用HTML直接布局，避免Streamlit列布局的间隔问题
     st.markdown('''
-    <div style="display: flex; gap: 8px; justify-content: flex-start; align-items: center; padding: 5px 0; margin-bottom: 5px;">
+    <div style="display: flex; gap: 8px; justify-content: flex-start; align-items: center; padding: 5px 0; margin-bottom: 2px;">
         <button id="top-dl-btn" style="background: transparent; border: none; font-size: 24px; padding: 0; cursor: pointer;">📥</button>
         <button id="top-wx-btn" style="background: transparent; border: none; font-size: 24px; padding: 0; cursor: pointer;">💬</button>
         <button id="top-pl-btn" style="background: transparent; border: none; font-size: 24px; padding: 0; cursor: pointer;">📅</button>
@@ -969,7 +1001,10 @@ else:
     ''', unsafe_allow_html=True)
 
     # 3. 生成按钮（美观整洁，居中显示）
-    st.markdown('<div class="gen-btn">', unsafe_allow_html=True)
+    # 使用HTML包装确保居中，减小上方留白
+    st.markdown('''
+    <div style="display: flex; justify-content: center; align-items: center; margin: 2px 0 8px 0; padding: 0; width: 100%;">
+    ''', unsafe_allow_html=True)
     if st.button("✨ 生成今日菜单", key="gen_btn", use_container_width=False):
         with st.spinner("魔法规划中..."): time.sleep(0.5); generate_full_menu()
     st.markdown('</div>', unsafe_allow_html=True)
