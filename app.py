@@ -332,6 +332,81 @@ st.markdown("""
             margin: 0 !important;
             flex: 0 0 auto !important;
         }
+        /* 移动端：进一步减小卡片间距和内部空间 */
+        .dish-card {
+            margin-bottom: 8px !important;
+            border-radius: 12px !important;
+        }
+        .card-banner {
+            padding: 4px !important;
+            font-size: 13px !important;
+        }
+        .dish-label {
+            font-size: 14px !important;
+            margin-bottom: 2px !important;
+            padding-top: 2px !important;
+        }
+        .ing-scroll {
+            padding: 2px 8px 6px 8px !important;
+            gap: 3px !important;
+        }
+        .pill {
+            padding: 1px 6px !important;
+            font-size: 10px !important;
+        }
+        /* 生成按钮也缩小 */
+        .gen-btn button {
+            height: 44px !important;
+            font-size: 16px !important;
+            margin-top: 3px !important;
+        }
+        /* 减小所有不必要的间距 */
+        .main > div {
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+        }
+        /* 强制所有按钮去掉背景和边框 - 使用最强制性的选择器 */
+        button[kind="secondary"],
+        button[kind="primary"],
+        button[type="button"],
+        button {
+            background-color: transparent !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        /* 特别针对所有图标按钮 */
+        button:contains("📥"),
+        button:contains("💬"),
+        button:contains("📅"),
+        button:contains("❤️"),
+        button:contains("🙂"),
+        button:contains("😐"),
+        button:contains("⚫"),
+        button:contains("🍳"),
+        button:contains("🔄") {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 1px !important;
+            margin: 0 !important;
+            width: auto !important;
+            min-width: auto !important;
+        }
+        /* 使用属性选择器强制去掉背景 */
+        button[key*="dl_btn"],
+        button[key*="wx_btn"],
+        button[key*="pl_btn"],
+        button[key*="lk_"],
+        button[key*="dl_"],
+        button[key*="ck_"],
+        button[key*="sw_"] {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 1px !important;
+            margin: 0 !important;
+        }
     }
 
     /* 顶部图标按钮样式 - 让边框无限接近图标大小 */
@@ -419,34 +494,38 @@ st.markdown("""
 
     /* 5. 菜品卡片 (紧凑) */
     .dish-card {
-        background: white; border-radius: 20px; margin-bottom: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.04); overflow: hidden;
+        background: white; border-radius: 15px; margin-bottom: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03); overflow: hidden;
     }
-    .card-banner { padding: 10px; text-align: center; color: white; font-weight: 800; font-size: 16px; letter-spacing: 3px; }
+    .card-banner { padding: 6px; text-align: center; color: white; font-weight: 800; font-size: 14px; letter-spacing: 2px; }
     .bg-orange { background: #FF9500; } .bg-blue { background: #007AFF; } .bg-purple { background: #AF52DE; }
 
     /* 菜名 */
     .dish-label { 
-        font-size: 17px; font-weight: 700; color: #1C1C1E; 
-        line-height: 1.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 5px;
-        margin-bottom: 5px;
+        font-size: 15px; font-weight: 700; color: #1C1C1E; 
+        line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 5px;
+        margin-bottom: 3px;
+        padding-top: 3px;
     }
     
-    /* 菜品图标按钮 - 让边框无限接近图标大小 */
+    /* 菜品图标按钮 - 让边框无限接近图标大小，使用更强制性的选择器 */
     .dish-card [data-testid="column"] button,
     .dish-card [data-testid="column"] button[kind="secondary"],
     .dish-card [data-testid="column"] button[kind="primary"],
-    .dish-card [data-testid="column"] button[type="button"] {
+    .dish-card [data-testid="column"] button[type="button"],
+    .dish-card button,
+    .dish-card [data-testid="column"] > * button {
         background: transparent !important; 
         border: none !important;
-        font-size: 22px !important; 
-        width: 32px !important; 
-        height: 32px !important; 
-        padding: 2px !important; 
+        font-size: 20px !important; 
+        width: 30px !important; 
+        height: 30px !important; 
+        padding: 1px !important; 
         margin: 0 !important;
         box-shadow: none !important; 
         color: #8E8E93 !important;
-        min-width: 32px !important;
+        min-width: 30px !important;
+        max-width: 30px !important;
         line-height: 1 !important;
         display: inline-flex !important;
         align-items: center !important;
@@ -468,13 +547,13 @@ st.markdown("""
         font-weight: bold !important;
     }
 
-    /* 食材条 */
+    /* 食材条 - 更紧凑 */
     .ing-scroll { 
-        display: flex; overflow-x: auto; gap: 6px; padding: 5px 15px 15px 15px; 
+        display: flex; overflow-x: auto; gap: 4px; padding: 3px 10px 8px 10px; 
         -webkit-overflow-scrolling: touch; scrollbar-width: none;
     }
     .ing-scroll::-webkit-scrollbar { display: none; }
-    .pill { background: #F2F2F7; color: #3A3A3C; padding: 4px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .pill { background: #F2F2F7; color: #3A3A3C; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600; white-space: nowrap; }
     .pill-hit { background: #FFF4E5; color: #FF9500; }
 
     /* 历史 & 清单 */
