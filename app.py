@@ -1036,26 +1036,23 @@ else:
         </div>
         ''', unsafe_allow_html=True)
     
-    # 2. 顶部三个图标（下载 / 推送 / 计划）——直接使用 Streamlit 按钮，避免复杂 HTML+JS
-    col_dl, col_wx, col_pl = st.columns(3)
-    with col_dl:
-        if st.session_state.menu_state['breakfast']:
-            st.download_button(
-                "📥",
-                data=create_menu_card_image(
-                    st.session_state.menu_state,
-                    st.session_state.user_data['nickname']
-                ),
-                file_name="menu.png",
-                key="dl_btn",
-                use_container_width=True,
-            )
-        else:
-            st.button("📥", disabled=True, key="dl_btn_disabled", use_container_width=True)
-    with col_wx:
-        st.button("💬", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn", use_container_width=True)
-    with col_pl:
-        st.button("📅", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn", use_container_width=True)
+    # 2. 顶部三个图标（下载 / 推送 / 计划）——改为竖向排列，避免横向滚动
+    if st.session_state.menu_state['breakfast']:
+        st.download_button(
+            "📥 下载菜单",
+            data=create_menu_card_image(
+                st.session_state.menu_state,
+                st.session_state.user_data['nickname']
+            ),
+            file_name="menu.png",
+            key="dl_btn",
+            use_container_width=True,
+        )
+    else:
+        st.button("📥 下载菜单", disabled=True, key="dl_btn_disabled", use_container_width=True)
+
+    st.button("💬 推送到微信", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn", use_container_width=True)
+    st.button("📅 生成计划", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn", use_container_width=True)
 
     # 3. 生成按钮（美观整洁，居中显示）
     st.markdown(
@@ -1087,25 +1084,23 @@ else:
             # 菜名单独一行
             st.markdown(f'<div class="dish-label">{d["name"]}</div>', unsafe_allow_html=True)
 
-            # 四个图标按钮在菜名下面，直接使用 Streamlit 按钮，通过 CSS 控制紧凑外观
-            b1, b2, b3, b4 = st.columns(4)
-            with b1: 
-                if st.button("❤️" if is_l else "🙂", key=f"lk_{k}", use_container_width=True):
-                    toggle_feedback(d['name'], 'like')
-                    st.rerun()
-            with b2:
-                label = "⚫" if is_dl else "😐"
-                if st.button(label, key=f"dl_{k}", use_container_width=True):
-                    toggle_feedback(d['name'], 'dislike')
-                    st.rerun()
-            with b3:
-                if st.button("🍳", key=f"ck_{k}", use_container_width=True):
-                    enter_cook_mode(d)
-                    st.rerun()
-            with b4:
-                if st.button("🔄", key=f"sw_{k}", use_container_width=True):
-                    swap_dish(k, pool_keys[idx])
-                    st.rerun()
+            # 四个图标按钮在菜名下面，竖向排列，避免横向滚动
+            if st.button("❤️ 喜欢" if is_l else "🙂 一般", key=f"lk_{k}", use_container_width=True):
+                toggle_feedback(d['name'], 'like')
+                st.rerun()
+
+            label = "⚫ 不喜欢" if is_dl else "😐 待定"
+            if st.button(label, key=f"dl_{k}", use_container_width=True):
+                toggle_feedback(d['name'], 'dislike')
+                st.rerun()
+
+            if st.button("🍳 烹饪", key=f"ck_{k}", use_container_width=True):
+                enter_cook_mode(d)
+                st.rerun()
+
+            if st.button("🔄 换一道", key=f"sw_{k}", use_container_width=True):
+                swap_dish(k, pool_keys[idx])
+                st.rerun()
 
             # 食材标签
             nf = [normalize_ingredient(i) for i in st.session_state.user_data['fridge_items']]
