@@ -33,7 +33,8 @@ USER_DATA_FILE = os.path.join(BASE_DIR, "user_data.json")
 FONT_FILE = os.path.join(BASE_DIR, "SimHei.ttf")
 # 头像图片路径（支持多种格式和文件名）
 AVATAR_FILE = None
-for filename in ["bluey.png", "bluey.jpg", "bluey.jpeg", "avatar.png", "avatar.jpg", "头像.png", "头像.jpg"]:
+# 优先查找webp格式（GitHub自动转换的格式）
+for filename in ["bluey.png.webp", "bluey.webp", "bluey.png", "bluey.jpg", "bluey.jpeg", "avatar.png.webp", "avatar.webp", "avatar.png", "avatar.jpg", "头像.png.webp", "头像.webp", "头像.png", "头像.jpg"]:
     path = os.path.join(BASE_DIR, filename)
     if os.path.exists(path):
         AVATAR_FILE = path
@@ -516,7 +517,7 @@ with st.sidebar:
             st.markdown('<div style="width:80px;height:80px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;margin:0 auto;box-shadow:0 2px 8px rgba(0,0,0,0.1);line-height:1;">🦴</div>', unsafe_allow_html=True)
     else:
         st.markdown('<div style="width:80px;height:80px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;margin:0 auto;box-shadow:0 2px 8px rgba(0,0,0,0.1);line-height:1;">🦴</div>', unsafe_allow_html=True)
-        st.caption("💡 请将头像图片命名为 bluey.png 放在项目目录中")
+        st.caption("💡 请将头像图片命名为 bluey.png 或 bluey.png.webp 放在项目目录中")
     
     with st.expander("📝 档案设置 (含过敏原)", expanded=True):
         u = st.session_state.user_data
@@ -596,8 +597,14 @@ else:
             # 将本地图片转换为base64编码，以便在HTML中使用
             with open(AVATAR_FILE, "rb") as img_file:
                 img_data = base64.b64encode(img_file.read()).decode()
+                # 处理webp格式（包括bluey.png.webp这种情况）
                 img_ext = os.path.splitext(AVATAR_FILE)[1].lower().replace('.', '')
-                img_mime = f"image/{img_ext}" if img_ext in ['png', 'jpg', 'jpeg'] else "image/png"
+                if img_ext == 'webp' or AVATAR_FILE.endswith('.webp'):
+                    img_mime = "image/webp"
+                elif img_ext in ['png', 'jpg', 'jpeg']:
+                    img_mime = f"image/{img_ext}"
+                else:
+                    img_mime = "image/png"
                 img_src = f"data:{img_mime};base64,{img_data}"
         else:
             # 如果本地图片不存在，使用emoji备用
