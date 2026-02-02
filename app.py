@@ -302,22 +302,24 @@ st.markdown("""
         }
     }
 
-    /* 图标按钮样式 (紧凑型) */
-    .icon-btn {
-        width: 100% !important;
-        min-width: 0 !important;
-        padding: 0 !important;
-        margin: 0 !important;
+    /* 顶部图标按钮样式 - 去掉边框，只显示图标 */
+    button[kind="secondary"]:has-text("📥"),
+    button[kind="secondary"]:has-text("💬"),
+    button[kind="secondary"]:has-text("📅") {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-size: 24px !important;
+        padding: 5px !important;
     }
-    .icon-btn button {
-        border-radius: 12px !important; border: none !important;
-        height: 40px !important; width: 100% !important; /* 填满列宽 */
-        padding: 0 !important; margin: 0 !important;
-        display: flex !important; align-items: center !important; justify-content: center !important;
-        color: white !important; font-size: 18px !important;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
-        min-width: 0 !important;
-        flex-shrink: 0 !important;
+    /* 通用顶部按钮样式 */
+    div[data-testid="column"]:has(button[kind="secondary"]) button {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-size: 24px !important;
+        padding: 5px !important;
+        color: #1C1C1E !important;
     }
     /* 移动端进一步优化图标按钮 */
     @media (max-width: 768px) {
@@ -360,15 +362,27 @@ st.markdown("""
         line-height: 2.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 5px;
     }
     
-    /* 迷你按钮 */
-    .mini-icon-btn button {
-        background: transparent !important; border: none !important;
-        font-size: 20px !important; width: 32px !important; height: 32px !important; 
-        padding: 0 !important; margin: 0 auto !important;
-        box-shadow: none !important; color: #8E8E93 !important;
+    /* 菜品图标按钮 - 去掉边框，紧密排列 */
+    .dish-card [data-testid="column"] button {
+        background: transparent !important; 
+        border: none !important;
+        font-size: 22px !important; 
+        width: 100% !important; 
+        height: 40px !important; 
+        padding: 0 !important; 
+        margin: 0 !important;
+        box-shadow: none !important; 
+        color: #8E8E93 !important;
     }
-    .btn-red button { color: #FF3B30 !important; transform: scale(1.1); }
-    .btn-blue button { color: #007AFF !important; font-weight: bold !important; }
+    /* 喜欢按钮红色 */
+    .dish-card button[kind="secondary"] {
+        color: #8E8E93 !important;
+    }
+    /* 烹饪按钮蓝色 - 通过key选择 */
+    .dish-card button[key*="ck_"] {
+        color: #007AFF !important;
+        font-weight: bold !important;
+    }
 
     /* 食材条 */
     .ing-scroll { 
@@ -602,9 +616,8 @@ with st.sidebar:
     with st.expander("📝 档案设置 (含过敏原)", expanded=True):
         u = st.session_state.user_data
         u['nickname'] = st.text_input("昵称", u['nickname'])
-        c1, c2 = st.columns(2)
-        st.session_state.user_data['height'] = c1.text_input("身高", st.session_state.user_data.get('height',''))
-        st.session_state.user_data['weight'] = c2.text_input("体重", st.session_state.user_data.get('weight',''))
+        st.session_state.user_data['height'] = st.text_input("身高", st.session_state.user_data.get('height',''))
+        st.session_state.user_data['weight'] = st.text_input("体重", st.session_state.user_data.get('weight',''))
         
         st.markdown("**🚫 过敏原 (自动过滤)**")
         default_al = ["牛奶", "奶粉", "牛肉", "鸡蛋", "虾", "鱼", "花生", "麦麸"]
@@ -667,60 +680,52 @@ if st.session_state.view_mode == "cook" and st.session_state.focus_dish:
 # 仪表盘
 else:
     # 1. 顶部 Header
-    # 恢复原来的排列，移动端允许横向滚动查看所有图标
-    c_prof, c_dl, c_wx, c_pl = st.columns([4.5, 1.5, 1.5, 1.5], gap="small")
+    # 头像和名字在第一行
+    if AVATAR_FILE and os.path.exists(AVATAR_FILE):
+        # 将本地图片转换为base64编码，以便在HTML中使用
+        with open(AVATAR_FILE, "rb") as img_file:
+            img_data = base64.b64encode(img_file.read()).decode()
+            # 处理webp格式（包括bluey.png.webp这种情况）
+            img_ext = os.path.splitext(AVATAR_FILE)[1].lower().replace('.', '')
+            if img_ext == 'webp' or AVATAR_FILE.endswith('.webp'):
+                img_mime = "image/webp"
+            elif img_ext in ['png', 'jpg', 'jpeg']:
+                img_mime = f"image/{img_ext}"
+            else:
+                img_mime = "image/png"
+            img_src = f"data:{img_mime};base64,{img_data}"
+    else:
+        img_src = None
     
-    with c_prof:
-        # 使用本地图片作为头像
-        if AVATAR_FILE and os.path.exists(AVATAR_FILE):
-            # 将本地图片转换为base64编码，以便在HTML中使用
-            with open(AVATAR_FILE, "rb") as img_file:
-                img_data = base64.b64encode(img_file.read()).decode()
-                # 处理webp格式（包括bluey.png.webp这种情况）
-                img_ext = os.path.splitext(AVATAR_FILE)[1].lower().replace('.', '')
-                if img_ext == 'webp' or AVATAR_FILE.endswith('.webp'):
-                    img_mime = "image/webp"
-                elif img_ext in ['png', 'jpg', 'jpeg']:
-                    img_mime = f"image/{img_ext}"
-                else:
-                    img_mime = "image/png"
-                img_src = f"data:{img_mime};base64,{img_data}"
-        else:
-            # 如果本地图片不存在，使用emoji备用
-            img_src = None
-        
-        if img_src:
-            st.markdown(f'''
-            <div class="header-box">
-                <img src="{img_src}" 
-                     class="avatar-img" 
-                     alt="Bluey"
-                     style="object-fit: cover; background: linear-gradient(135deg, #FF9500, #FF7B00);">
-                <div class="header-title">Hi, {st.session_state.user_data["nickname"]}</div>
-            </div>
-            ''', unsafe_allow_html=True)
-        else:
-            st.markdown(f'''
-            <div class="header-box">
-                <div style="width:50px;height:50px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.1);flex-shrink:0;">🦴</div>
-                <div class="header-title">Hi, {st.session_state.user_data["nickname"]}</div>
-            </div>
-            ''', unsafe_allow_html=True)
+    if img_src:
+        st.markdown(f'''
+        <div class="header-box">
+            <img src="{img_src}" 
+                 class="avatar-img" 
+                 alt="Bluey"
+                 style="object-fit: cover; background: linear-gradient(135deg, #FF9500, #FF7B00);">
+            <div class="header-title">Hi, {st.session_state.user_data["nickname"]}</div>
+        </div>
+        ''', unsafe_allow_html=True)
+    else:
+        st.markdown(f'''
+        <div class="header-box">
+            <div style="width:50px;height:50px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.1);flex-shrink:0;">🦴</div>
+            <div class="header-title">Hi, {st.session_state.user_data["nickname"]}</div>
+        </div>
+        ''', unsafe_allow_html=True)
     
-    with c_dl:
-        st.markdown('<div class="icon-btn" style="background:#007AFF !important;">', unsafe_allow_html=True)
+    # 下载、推送、计划图标在第二行，紧密排列，去掉边框
+    icon_col1, icon_col2, icon_col3 = st.columns([1, 1, 1], gap="small")
+    with icon_col1:
         if st.session_state.menu_state['breakfast']:
             st.download_button("📥", data=create_menu_card_image(st.session_state.menu_state, st.session_state.user_data['nickname']), file_name="menu.png", key="dl_btn", use_container_width=True)
-        else: st.button("📥", disabled=True, key="dl_btn", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    with c_wx:
-        st.markdown('<div class="icon-btn" style="background:#34C759 !important;">', unsafe_allow_html=True)
+        else: 
+            st.button("📥", disabled=True, key="dl_btn", use_container_width=True)
+    with icon_col2:
         st.button("💬", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    with c_pl:
-        st.markdown('<div class="icon-btn" style="background:#FF9500 !important;">', unsafe_allow_html=True)
+    with icon_col3:
         st.button("📅", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
 
     # 3. 生成按钮
     st.markdown('<div class="gen-btn">', unsafe_allow_html=True)
@@ -740,25 +745,17 @@ else:
             # 菜名单独一行
             st.markdown(f'<div class="dish-label">{d["name"]}</div>', unsafe_allow_html=True)
             
-            # 4个图标按钮在菜名下面，紧密排列
+            # 4个图标按钮在菜名下面，紧密排列，去掉边框
             b1, b2, b3, b4 = st.columns([1, 1, 1, 1], gap="small")
             with b1: 
-                st.markdown(f'<div class="mini-icon-btn {"btn-red" if is_l else ""}">', unsafe_allow_html=True)
                 if st.button("❤️" if is_l else "🙂", key=f"lk_{k}", use_container_width=True): toggle_feedback(d['name'], 'like'); st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
             with b2:
-                st.markdown('<div class="mini-icon-btn">', unsafe_allow_html=True)
                 label = "⚫" if is_dl else "😐"
                 if st.button(label, key=f"dl_{k}", use_container_width=True): toggle_feedback(d['name'], 'dislike'); st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
             with b3:
-                st.markdown('<div class="mini-icon-btn btn-blue">', unsafe_allow_html=True)
                 if st.button("🍳", key=f"ck_{k}", use_container_width=True): enter_cook_mode(d); st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
             with b4:
-                st.markdown('<div class="mini-icon-btn">', unsafe_allow_html=True)
                 if st.button("🔄", key=f"sw_{k}", use_container_width=True): swap_dish(k, pool_keys[idx]); st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
             
             nf = [normalize_ingredient(i) for i in st.session_state.user_data['fridge_items']]
             ing_html = "".join([f'<span class="pill {"pill-hit" if normalize_ingredient(i) in nf else ""}">{i}</span>' for i in d['ingredients']])
