@@ -618,6 +618,27 @@ st.markdown("""
     .hist-head { font-weight: 700; color: #1C1C1E; font-size: 15px; margin-bottom: 5px; }
     .hist-txt { color: #666; font-size: 13px; line-height: 1.6; }
     .receipt-card { background: #FFF; padding: 15px; border: 1px dashed #DDD; border-radius: 10px; font-size: 14px; text-align: center; margin-top: 15px;}
+    
+    /* 隐藏所有用于触发的隐藏按钮 */
+    button[key*="_hidden"],
+    button[key="dl_btn_hidden"],
+    button[key="wx_btn_hidden"],
+    button[key="pl_btn_hidden"],
+    button[key*="lk_"][key*="_hidden"],
+    button[key*="dl_"][key*="_hidden"],
+    button[key*="ck_"][key*="_hidden"],
+    button[key*="sw_"][key*="_hidden"] {
+        display: none !important;
+        visibility: hidden !important;
+        position: absolute !important;
+        left: -9999px !important;
+        width: 0 !important;
+        height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -935,14 +956,14 @@ else:
         ''', unsafe_allow_html=True)
     
     # 下载、推送、计划图标 - 使用纯HTML/CSS布局，完全控制间距
-    # 创建隐藏的Streamlit按钮用于触发功能
+    # 创建隐藏的Streamlit按钮用于触发功能（使用CSS隐藏）
     if st.session_state.menu_state['breakfast']:
-        st.download_button("", data=create_menu_card_image(st.session_state.menu_state, st.session_state.user_data['nickname']), file_name="menu.png", key="dl_btn_hidden", use_container_width=False, label_visibility="hidden")
+        st.download_button("", data=create_menu_card_image(st.session_state.menu_state, st.session_state.user_data['nickname']), file_name="menu.png", key="dl_btn_hidden", use_container_width=False)
     else:
-        st.button("", disabled=True, key="dl_btn_hidden", use_container_width=False, label_visibility="hidden")
+        st.button("", disabled=True, key="dl_btn_hidden", use_container_width=False)
     
-    st.button("", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn_hidden", use_container_width=False, label_visibility="hidden")
-    st.button("", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn_hidden", use_container_width=False, label_visibility="hidden")
+    st.button("", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn_hidden", use_container_width=False)
+    st.button("", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn_hidden", use_container_width=False)
     
     # 使用HTML创建图标布局
     st.markdown('''
@@ -1019,14 +1040,14 @@ else:
             # 菜名单独一行
             st.markdown(f'<div class="dish-label">{d["name"]}</div>', unsafe_allow_html=True)
             
-            # 创建隐藏的Streamlit按钮用于触发功能
-            if st.button("", key=f"lk_{k}_hidden", use_container_width=False, label_visibility="hidden"): 
+            # 创建隐藏的Streamlit按钮用于触发功能（使用CSS隐藏）
+            if st.button("", key=f"lk_{k}_hidden", use_container_width=False): 
                 toggle_feedback(d['name'], 'like'); st.rerun()
-            if st.button("", key=f"dl_{k}_hidden", use_container_width=False, label_visibility="hidden"): 
+            if st.button("", key=f"dl_{k}_hidden", use_container_width=False): 
                 toggle_feedback(d['name'], 'dislike'); st.rerun()
-            if st.button("", key=f"ck_{k}_hidden", use_container_width=False, label_visibility="hidden"): 
+            if st.button("", key=f"ck_{k}_hidden", use_container_width=False): 
                 enter_cook_mode(d); st.rerun()
-            if st.button("", key=f"sw_{k}_hidden", use_container_width=False, label_visibility="hidden"): 
+            if st.button("", key=f"sw_{k}_hidden", use_container_width=False): 
                 swap_dish(k, pool_keys[idx]); st.rerun()
             
             # 使用HTML创建图标布局 - 4个图标紧密排列
