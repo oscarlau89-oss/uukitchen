@@ -130,6 +130,18 @@ st.markdown("""
         width: 50px !important; height: 50px !important; min-width: 50px !important;
         border-radius: 50%; border: 2px solid white; 
         box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover;
+        display: block !important;
+    }
+    /* 图片加载失败时的备用样式 */
+    .avatar-img:before {
+        content: "🦴";
+        display: block;
+        width: 50px;
+        height: 50px;
+        line-height: 50px;
+        text-align: center;
+        background: #FF9500;
+        border-radius: 50%;
     }
     .header-title { 
         font-size: 20px; font-weight: 800; color: #1C1C1E; 
@@ -137,10 +149,42 @@ st.markdown("""
     }
     
     /* 3. 强制缩小列间距 (解决图标太远问题) */
-    [data-testid="column"] { padding: 0 2px !important; }
-    [data-testid="stHorizontalBlock"] { gap: 0.3rem !important; } /* 关键：缩小列缝隙 */
+    [data-testid="column"] { 
+        padding: 0 2px !important; 
+        flex-shrink: 0 !important; /* 防止列收缩 */
+    }
+    [data-testid="stHorizontalBlock"] { 
+        gap: 0.3rem !important; 
+        display: flex !important; 
+        flex-wrap: nowrap !important; /* 强制不换行 */
+        width: 100% !important;
+        overflow: visible !important;
+    }
+    /* 移动端强制图标一行显示 */
+    @media (max-width: 768px) {
+        [data-testid="stHorizontalBlock"] {
+            flex-wrap: nowrap !important;
+            display: flex !important;
+            width: 100% !important;
+            overflow-x: visible !important;
+        }
+        [data-testid="column"] {
+            flex: 0 0 auto !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            flex-basis: auto !important;
+        }
+        /* 针对顶部header的列进行特殊处理 */
+        .element-container:has([data-testid="stHorizontalBlock"]) [data-testid="column"] {
+            flex: 1 1 auto !important;
+        }
+    }
 
     /* 图标按钮样式 (紧凑型) */
+    .icon-btn {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
     .icon-btn button {
         border-radius: 12px !important; border: none !important;
         height: 40px !important; width: 100% !important; /* 填满列宽 */
@@ -148,6 +192,8 @@ st.markdown("""
         display: flex !important; align-items: center !important; justify-content: center !important;
         color: white !important; font-size: 18px !important;
         box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
+        min-width: 0 !important;
+        flex-shrink: 0 !important;
     }
     div[data-testid="column"]:nth-of-type(2) button { background: #007AFF !important; }
     div[data-testid="column"]:nth-of-type(3) button { background: #34C759 !important; }
@@ -405,7 +451,8 @@ def exit_cook_mode():
 
 # 侧边栏
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/en/1/17/Bluey_Heeler.png", width=80)
+    # 使用CSS创建圆形头像，直接显示emoji
+    st.markdown('<div style="width:80px;height:80px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;margin:0 auto;box-shadow:0 2px 8px rgba(0,0,0,0.1);line-height:1;">🦴</div>', unsafe_allow_html=True)
     
     with st.expander("📝 档案设置 (含过敏原)", expanded=True):
         u = st.session_state.user_data
@@ -479,9 +526,10 @@ else:
     c_prof, c_dl, c_wx, c_pl = st.columns([4.5, 1.5, 1.5, 1.5])
     
     with c_prof:
+        # 使用CSS创建圆形头像，直接显示emoji，不依赖外部图片
         st.markdown(f'''
         <div class="header-box">
-            <img src="https://upload.wikimedia.org/wikipedia/en/1/17/Bluey_Heeler.png" class="avatar-img">
+            <div style="width:50px;height:50px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.1);flex-shrink:0;line-height:1;">🦴</div>
             <div class="header-title">Hi, {st.session_state.user_data["nickname"]}</div>
         </div>
         ''', unsafe_allow_html=True)
@@ -489,16 +537,16 @@ else:
     with c_dl:
         st.markdown('<div class="icon-btn" style="background:#007AFF !important;">', unsafe_allow_html=True)
         if st.session_state.menu_state['breakfast']:
-            st.download_button("📥", data=create_menu_card_image(st.session_state.menu_state, st.session_state.user_data['nickname']), file_name="menu.png", key="dl_btn")
-        else: st.button("📥", disabled=True, key="dl_btn")
+            st.download_button("📥", data=create_menu_card_image(st.session_state.menu_state, st.session_state.user_data['nickname']), file_name="menu.png", key="dl_btn", use_container_width=True)
+        else: st.button("📥", disabled=True, key="dl_btn", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
     with c_wx:
         st.markdown('<div class="icon-btn" style="background:#34C759 !important;">', unsafe_allow_html=True)
-        st.button("💬", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn")
+        st.button("💬", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
     with c_pl:
         st.markdown('<div class="icon-btn" style="background:#FF9500 !important;">', unsafe_allow_html=True)
-        st.button("📅", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn")
+        st.button("📅", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     # 3. 生成按钮
