@@ -269,16 +269,36 @@ st.markdown("""
             min-width: 32px !important;
             width: 100% !important;
         }
-        /* 确保列不会超出屏幕 */
-        [data-testid="column"]:nth-child(1) {
-            flex: 0 0 60% !important; /* 左侧头像+名字占60% */
-            max-width: 60% !important;
+        /* 顶部header允许横向滚动 */
+        .element-container:has(.header-box) [data-testid="stHorizontalBlock"] {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
         }
-        [data-testid="column"]:nth-child(2),
-        [data-testid="column"]:nth-child(3),
-        [data-testid="column"]:nth-child(4) {
-            flex: 0 0 13.33% !important; /* 每个图标占约13.33% */
-            max-width: 13.33% !important;
+        
+        /* 菜品图标按钮：紧密排列在一行 */
+        .dish-label {
+            padding-left: 5px;
+            margin-bottom: 5px;
+        }
+        /* 确保菜品图标按钮容器紧密排列 */
+        .element-container:has(.mini-icon-btn) [data-testid="stHorizontalBlock"] {
+            gap: 0.2rem !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .element-container:has(.mini-icon-btn) [data-testid="column"] {
+            padding: 0 2px !important;
+            margin: 0 !important;
+        }
+        .mini-icon-btn {
+            width: 100% !important;
+        }
+        .mini-icon-btn button {
+            width: 100% !important;
+            height: 36px !important;
+            font-size: 18px !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
     }
 
@@ -647,9 +667,8 @@ if st.session_state.view_mode == "cook" and st.session_state.focus_dish:
 # 仪表盘
 else:
     # 1. 顶部 Header
-    # 移动端优化：左侧头像+名字，右侧图标紧凑排列
-    # 使用响应式列布局，移动端自动调整，减小左侧宽度，让图标更紧凑
-    c_prof, c_dl, c_wx, c_pl = st.columns([4, 1, 1, 1], gap="small")
+    # 恢复原来的排列，移动端允许横向滚动查看所有图标
+    c_prof, c_dl, c_wx, c_pl = st.columns([4.5, 1.5, 1.5, 1.5], gap="small")
     
     with c_prof:
         # 使用本地图片作为头像
@@ -718,25 +737,27 @@ else:
             is_l = d['name'] in st.session_state.user_data['likes']
             is_dl = d['name'] in st.session_state.user_data['dislikes']
             
-            # Row Layout: 菜名(3.5) + 4个按钮(1.2 each)
-            cn, b1, b2, b3, b4 = st.columns([3.5, 1.2, 1.2, 1.2, 1.2])
-            with cn: st.markdown(f'<div class="dish-label">{d["name"]}</div>', unsafe_allow_html=True)
+            # 菜名单独一行
+            st.markdown(f'<div class="dish-label">{d["name"]}</div>', unsafe_allow_html=True)
+            
+            # 4个图标按钮在菜名下面，紧密排列
+            b1, b2, b3, b4 = st.columns([1, 1, 1, 1], gap="small")
             with b1: 
                 st.markdown(f'<div class="mini-icon-btn {"btn-red" if is_l else ""}">', unsafe_allow_html=True)
-                if st.button("❤️" if is_l else "🙂", key=f"lk_{k}"): toggle_feedback(d['name'], 'like'); st.rerun()
+                if st.button("❤️" if is_l else "🙂", key=f"lk_{k}", use_container_width=True): toggle_feedback(d['name'], 'like'); st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
             with b2:
                 st.markdown('<div class="mini-icon-btn">', unsafe_allow_html=True)
                 label = "⚫" if is_dl else "😐"
-                if st.button(label, key=f"dl_{k}"): toggle_feedback(d['name'], 'dislike'); st.rerun()
+                if st.button(label, key=f"dl_{k}", use_container_width=True): toggle_feedback(d['name'], 'dislike'); st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
             with b3:
                 st.markdown('<div class="mini-icon-btn btn-blue">', unsafe_allow_html=True)
-                if st.button("🍳", key=f"ck_{k}"): enter_cook_mode(d); st.rerun()
+                if st.button("🍳", key=f"ck_{k}", use_container_width=True): enter_cook_mode(d); st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
             with b4:
                 st.markdown('<div class="mini-icon-btn">', unsafe_allow_html=True)
-                if st.button("🔄", key=f"sw_{k}"): swap_dish(k, pool_keys[idx]); st.rerun()
+                if st.button("🔄", key=f"sw_{k}", use_container_width=True): swap_dish(k, pool_keys[idx]); st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
             
             nf = [normalize_ingredient(i) for i in st.session_state.user_data['fridge_items']]
