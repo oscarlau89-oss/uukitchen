@@ -324,29 +324,31 @@ st.markdown("""
             padding-left: 5px;
             margin-bottom: 3px;
         }
-        /* 确保菜品图标按钮容器紧密排列 */
+        /* 确保菜品图标按钮容器紧密排列 - 移动端极紧凑 */
         .dish-card [data-testid="stHorizontalBlock"] {
-            gap: 2px !important;
+            gap: 0 !important;
             padding: 0 !important;
             margin: 0 !important;
         }
         .dish-card [data-testid="column"] {
-            padding: 0 1px !important;
+            padding: 0 !important;
             margin: 0 !important;
-            flex: 0 0 auto !important;
+            flex: 1 1 0 !important; /* 平均分配空间 */
+            min-width: 0 !important;
+            max-width: 25% !important; /* 每个按钮最多25% */
         }
         .dish-card [data-testid="column"] button {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
             font-size: 20px !important;
-            padding: 2px !important;
+            padding: 0 !important;
             margin: 0 !important;
-            min-width: auto !important;
+            min-width: 0 !important;
             width: 100% !important;
-            height: auto !important;
+            height: 36px !important;
         }
-        /* 顶部图标按钮也去掉边框 */
+        /* 顶部图标按钮也去掉边框，紧密排列 */
         button[key="dl_btn"],
         button[key="wx_btn"],
         button[key="pl_btn"] {
@@ -354,15 +356,26 @@ st.markdown("""
             border: none !important;
             box-shadow: none !important;
             font-size: 20px !important;
-            padding: 2px !important;
+            padding: 0 !important;
             margin: 0 !important;
         }
-        /* 顶部按钮容器也缩小 */
+        /* 顶部按钮容器也缩小 - 移动端极紧凑 */
         [data-testid="stHorizontalBlock"] {
-            gap: 2px !important;
+            gap: 0 !important;
         }
         [data-testid="column"] {
-            padding: 0 1px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            flex: 1 1 0 !important; /* 平均分配空间，不扩展 */
+            min-width: 0 !important;
+            max-width: 33.33% !important; /* 每个按钮最多33.33% */
+            flex-basis: 0 !important; /* 从0开始分配 */
+        }
+        /* 菜品图标按钮列也使用相同策略 */
+        .dish-card [data-testid="column"] {
+            flex: 1 1 0 !important;
+            max-width: 25% !important; /* 每个按钮最多25% */
+            flex-basis: 0 !important;
         }
         /* 移动端：进一步减小卡片间距和内部空间 */
         .dish-card {
