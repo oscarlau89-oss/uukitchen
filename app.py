@@ -677,6 +677,52 @@ st.markdown("""
         padding: 0 !important;
         margin: 0 !important;
     }
+
+    /* 顶部 3 个图标：缩短白框长度，并让图标居中 */
+    [data-testid="column"] .stButton > button[key="dl_btn"],
+    [data-testid="column"] .stButton > button[key="dl_btn_disabled"],
+    [data-testid="column"] .stButton > button[key="wx_btn"],
+    [data-testid="column"] .stButton > button[key="pl_btn"] {
+        background-color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+
+        min-width: 32px !important;
+        width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 16px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+        font-size: 20px !important;
+    }
+
+    /* 菜卡片里 4 个图标：白框缩小，图标居中 */
+    .dish-card .stButton > button[key*="lk_"],
+    .dish-card .stButton > button[key*="dl_"],
+    .dish-card .stButton > button[key*="ck_"],
+    .dish-card .stButton > button[key*="sw_"] {
+        background-color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+
+        min-width: 28px !important;
+        width: 28px !important;
+        height: 28px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 14px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+        font-size: 18px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
