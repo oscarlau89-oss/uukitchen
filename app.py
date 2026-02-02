@@ -619,7 +619,17 @@ st.markdown("""
     .hist-txt { color: #666; font-size: 13px; line-height: 1.6; }
     .receipt-card { background: #FFF; padding: 15px; border: 1px dashed #DDD; border-radius: 10px; font-size: 14px; text-align: center; margin-top: 15px;}
     
-    /* 隐藏所有用于触发的隐藏按钮 */
+    /* 隐藏所有用于触发的隐藏按钮及其容器 - 确保完全不占据空间 */
+    .element-container:has(button[key*="_hidden"]),
+    .element-container:has(button[key="dl_btn_hidden"]),
+    .element-container:has(button[key="wx_btn_hidden"]),
+    .element-container:has(button[key="pl_btn_hidden"]),
+    div:has(button[key*="_hidden"]),
+    div:has(button[key="dl_btn_hidden"]),
+    div:has(button[key="wx_btn_hidden"]),
+    div:has(button[key="pl_btn_hidden"]),
+    [data-testid="stButton"]:has(button[key*="_hidden"]),
+    [data-testid="stDownloadButton"]:has(button[key*="_hidden"]),
     button[key*="_hidden"],
     button[key="dl_btn_hidden"],
     button[key="wx_btn_hidden"],
@@ -634,10 +644,25 @@ st.markdown("""
         left: -9999px !important;
         width: 0 !important;
         height: 0 !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        max-width: 0 !important;
+        max-height: 0 !important;
         padding: 0 !important;
         margin: 0 !important;
         opacity: 0 !important;
         pointer-events: none !important;
+        overflow: hidden !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    /* 确保隐藏按钮的父容器也不占据空间 */
+    .element-container:has(button[key*="_hidden"]) {
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
 </style>
 """, unsafe_allow_html=True)
