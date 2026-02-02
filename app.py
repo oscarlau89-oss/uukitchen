@@ -258,39 +258,21 @@ st.markdown("""
     }
     /* 移动端强制图标一行显示，紧凑排列 */
     @media (max-width: 768px) {
-        [data-testid="stHorizontalBlock"] {
-            flex-wrap: nowrap !important;
-            display: flex !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            overflow-x: hidden !important; /* 防止横向滚动 */
-            gap: 0 !important; /* 完全移除间距 */
-            padding: 0 !important;
-            margin: 0 !important;
-        }
-        [data-testid="column"] {
-            padding: 0 !important;
-            margin: 0 !important;
-            flex: 0 0 auto !important;
-            min-width: 0 !important;
-            max-width: none !important;
-            flex-basis: auto !important;
-        }
-        /* 顶部header区域：左侧头像+名字更紧凑（覆盖之前的定义） */
+        /* 顶部header区域：左侧头像+名字更紧凑 */
         .header-box {
             margin-right: 0 !important;
-            gap: 4px !important; /* 与上面的定义保持一致 */
+            gap: 4px !important;
             padding: 5px 0 !important;
             width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box;
         }
         .header-title {
-            font-size: 15px !important; /* 与上面的定义保持一致 */
+            font-size: 15px !important;
             margin-left: 4px !important;
             flex: 1;
             min-width: 0;
-            max-width: calc(100% - 50px); /* 确保不超出 */
+            max-width: calc(100% - 50px);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -301,49 +283,37 @@ st.markdown("""
             min-width: 45px !important;
             flex-shrink: 0 !important;
         }
-        /* 图标按钮在移动端更小更紧凑 */
-        .icon-btn {
-            padding: 0 !important;
-            margin: 0 !important;
-            width: 100% !important;
-        }
-        .icon-btn button {
-            height: 32px !important;
-            font-size: 14px !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            min-width: 32px !important;
-            width: 100% !important;
-        }
-        /* 顶部header允许横向滚动 */
-        .element-container:has(.header-box) [data-testid="stHorizontalBlock"] {
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch;
-        }
         
-        /* 菜品图标按钮：紧密排列，去掉边框 */
-        .dish-label {
-            padding-left: 5px;
-            margin-bottom: 3px;
-        }
-        /* 移动端：图标自适应屏幕大小，确保一页显示 */
-        /* 确保所有容器不超出屏幕 */
-        [data-testid="stHorizontalBlock"] {
+        /* 移动端：图标自适应屏幕大小，确保一页显示 - 使用更具体的选择器确保优先级 */
+        /* 确保所有容器不超出屏幕 - 强制覆盖Streamlit默认样式 */
+        [data-testid="stHorizontalBlock"],
+        div[data-testid="stHorizontalBlock"],
+        .element-container [data-testid="stHorizontalBlock"] {
             gap: 0 !important;
             padding: 0 !important;
             margin: 0 !important;
             width: 100% !important;
             max-width: 100vw !important;
             box-sizing: border-box !important;
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            overflow-x: hidden !important;
         }
-        [data-testid="column"] {
+        /* 顶部图标列 - 3个图标平均分配 - 使用更具体的选择器 */
+        [data-testid="column"]:has(button[key="dl_btn"]),
+        [data-testid="column"]:has(button[key="wx_btn"]),
+        [data-testid="column"]:has(button[key="pl_btn"]),
+        div[data-testid="column"]:has(button[key="dl_btn"]),
+        div[data-testid="column"]:has(button[key="wx_btn"]),
+        div[data-testid="column"]:has(button[key="pl_btn"]) {
             padding: 0 !important;
             margin: 0 !important;
             flex: 1 1 0 !important;
             min-width: 0 !important;
-            max-width: 33.33% !important; /* 顶部3个图标，每个33.33% */
+            max-width: 33.33% !important;
             flex-basis: 0 !important;
             box-sizing: border-box !important;
+            width: 33.33% !important;
         }
         /* 顶部图标按钮 - 自适应屏幕大小 */
         button[key="dl_btn"],
@@ -352,43 +322,75 @@ st.markdown("""
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            font-size: 5vw !important; /* 使用vw单位自适应 */
+            font-size: 5vw !important;
             padding: 0 !important;
             margin: 0 !important;
             width: 100% !important;
             height: auto !important;
             min-width: 0 !important;
             max-width: 100% !important;
+            line-height: 1 !important;
         }
-        /* 菜品图标按钮容器 - 自适应屏幕大小 */
-        .dish-card [data-testid="stHorizontalBlock"] {
+        /* 菜品图标按钮容器 - 自适应屏幕大小 - 更具体的选择器 */
+        .dish-card [data-testid="stHorizontalBlock"],
+        .dish-card div[data-testid="stHorizontalBlock"],
+        .element-container:has(.dish-card) [data-testid="stHorizontalBlock"] {
             gap: 0 !important;
             padding: 0 !important;
             margin: 0 !important;
             width: 100% !important;
             max-width: 100vw !important;
             box-sizing: border-box !important;
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            overflow-x: hidden !important;
         }
-        .dish-card [data-testid="column"] {
+        /* 菜品图标列 - 4个图标平均分配 - 使用更具体的选择器 */
+        .dish-card [data-testid="column"],
+        .dish-card div[data-testid="column"] {
             padding: 0 !important;
             margin: 0 !important;
             flex: 1 1 0 !important;
             min-width: 0 !important;
-            max-width: 25% !important; /* 4个图标，每个25% */
+            max-width: 25% !important;
             flex-basis: 0 !important;
             box-sizing: border-box !important;
+            width: 25% !important;
         }
-        .dish-card [data-testid="column"] button {
+        /* 菜品图标按钮 - 自适应屏幕大小 */
+        .dish-card [data-testid="column"] button,
+        .dish-card button[key*="lk_"],
+        .dish-card button[key*="dl_"],
+        .dish-card button[key*="ck_"],
+        .dish-card button[key*="sw_"] {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            font-size: 4.5vw !important; /* 使用vw单位自适应 */
+            font-size: 4.5vw !important;
             padding: 0 !important;
             margin: 0 !important;
             min-width: 0 !important;
             width: 100% !important;
             height: auto !important;
             max-width: 100% !important;
+            line-height: 1 !important;
+        }
+        /* 保留按钮颜色 */
+        .dish-card button[key*="lk_"] {
+            color: #FF3B30 !important;
+        }
+        .dish-card button[key*="ck_"] {
+            color: #007AFF !important;
+            font-weight: bold !important;
+        }
+        .dish-card button[key*="dl_"],
+        .dish-card button[key*="sw_"] {
+            color: #8E8E93 !important;
+        }
+        /* 菜品标签样式 */
+        .dish-label {
+            padding-left: 5px;
+            margin-bottom: 3px;
         }
         /* 移动端：进一步减小卡片间距和内部空间 */
         .dish-card {
