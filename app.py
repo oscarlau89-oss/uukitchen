@@ -294,34 +294,74 @@ st.markdown("""
             flex-shrink: 0 !important;
         }
         
-        /* 移动端：HTML图标布局自适应屏幕大小 */
-        .icon-row-top,
-        .icon-row-dish {
-            width: 100% !important;
-            max-width: 100vw !important;
+        /* 移动端：强制顶部3个图标和菜品4个图标紧密排列，确保一页显示 */
+        /* 顶部3个图标的列容器 */
+        [data-testid="stHorizontalBlock"] {
             gap: 0 !important;
             padding: 0 !important;
             margin: 0 !important;
+            width: 100% !important;
+            max-width: 100vw !important;
             box-sizing: border-box !important;
         }
-        .icon-btn-top {
+        /* 顶部3个图标的列 */
+        [data-testid="column"] {
+            padding: 0 1px !important;
+            margin: 0 !important;
             flex: 1 1 0 !important;
             min-width: 0 !important;
             max-width: 33.33% !important;
-            padding: 6px 2px !important;
+            box-sizing: border-box !important;
         }
-        .icon-btn-dish {
+        /* 顶部3个图标按钮 */
+        button[key="dl_btn"],
+        button[key="wx_btn"],
+        button[key="pl_btn"],
+        button[key="dl_btn_disabled"],
+        button[data-testid="baseButton-download"][key="dl_btn"] {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            padding: 4px 2px !important;
+            margin: 0 !important;
+            font-size: 4vw !important;
+            line-height: 1 !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        /* 菜品卡片的4个图标列 */
+        .dish-card [data-testid="stHorizontalBlock"] {
+            gap: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100vw !important;
+            box-sizing: border-box !important;
+        }
+        .dish-card [data-testid="column"] {
+            padding: 0 1px !important;
+            margin: 0 !important;
             flex: 1 1 0 !important;
             min-width: 0 !important;
             max-width: 25% !important;
-            padding: 6px 2px !important;
+            box-sizing: border-box !important;
         }
-        /* 图标大小自适应屏幕 */
-        .icon-row-top .icon-emoji {
-            font-size: 5vw !important;
-        }
-        .icon-row-dish .icon-emoji {
-            font-size: 4.5vw !important;
+        /* 菜品4个图标按钮 */
+        .dish-card button[key*="lk_"],
+        .dish-card button[key*="dl_"],
+        .dish-card button[key*="ck_"],
+        .dish-card button[key*="sw_"] {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            padding: 4px 2px !important;
+            margin: 0 !important;
+            font-size: 3.5vw !important;
+            line-height: 1 !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
         }
         /* 菜品标签样式 */
         .dish-label {
@@ -366,35 +406,8 @@ st.markdown("""
             padding-top: 0.5rem !important;
             padding-bottom: 0.5rem !important;
         }
-        /* 强制所有按钮去掉背景和边框 - 使用最强制性的选择器 */
-        button[kind="secondary"],
-        button[kind="primary"],
-        button[type="button"],
-        button {
-            background-color: transparent !important;
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
-        /* 特别针对所有图标按钮 */
-        button:contains("📥"),
-        button:contains("💬"),
-        button:contains("📅"),
-        button:contains("❤️"),
-        button:contains("🙂"),
-        button:contains("😐"),
-        button:contains("⚫"),
-        button:contains("🍳"),
-        button:contains("🔄") {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 1px !important;
-            margin: 0 !important;
-            width: auto !important;
-            min-width: auto !important;
-        }
-        /* 使用属性选择器强制去掉背景 */
+        /* 移动端：确保所有图标按钮紧密排列，不超出屏幕 */
+        /* 强制所有图标按钮去掉背景和边框，减小尺寸 */
         button[key*="dl_btn"],
         button[key*="wx_btn"],
         button[key*="pl_btn"],
@@ -405,7 +418,7 @@ st.markdown("""
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            padding: 1px !important;
+            padding: 4px 2px !important;
             margin: 0 !important;
         }
     }
@@ -1027,13 +1040,13 @@ else:
                 continue
             is_l = d['name'] in st.session_state.user_data['likes']
             is_dl = d['name'] in st.session_state.user_data['dislikes']
-
+            
             # 菜名单独一行
             st.markdown(f'<div class="dish-label">{d["name"]}</div>', unsafe_allow_html=True)
 
             # 四个图标按钮在菜名下面，直接使用 Streamlit 按钮，通过 CSS 控制紧凑外观
             b1, b2, b3, b4 = st.columns(4)
-            with b1:
+            with b1: 
                 if st.button("❤️" if is_l else "🙂", key=f"lk_{k}", use_container_width=True):
                     toggle_feedback(d['name'], 'like')
                     st.rerun()
