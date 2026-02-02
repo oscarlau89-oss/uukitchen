@@ -275,51 +275,73 @@ st.markdown("""
             -webkit-overflow-scrolling: touch;
         }
         
-        /* 菜品图标按钮：紧密排列在一行 */
+        /* 菜品图标按钮：紧密排列在一行，去掉所有背景框 */
         .dish-label {
             padding-left: 5px;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
         /* 确保菜品图标按钮容器紧密排列 */
-        .element-container:has(.mini-icon-btn) [data-testid="stHorizontalBlock"] {
-            gap: 0.2rem !important;
+        .dish-card [data-testid="stHorizontalBlock"] {
+            gap: 0.1rem !important;
             padding: 0 !important;
             margin: 0 !important;
         }
-        .element-container:has(.mini-icon-btn) [data-testid="column"] {
-            padding: 0 2px !important;
+        .dish-card [data-testid="column"] {
+            padding: 0 1px !important;
             margin: 0 !important;
         }
-        .mini-icon-btn {
-            width: 100% !important;
-        }
-        .mini-icon-btn button {
-            width: 100% !important;
-            height: 36px !important;
-            font-size: 18px !important;
+        .dish-card [data-testid="column"] button {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            height: 32px !important;
+            font-size: 20px !important;
             padding: 0 !important;
             margin: 0 !important;
+        }
+        /* 顶部图标按钮也去掉背景框 */
+        div[data-testid="column"]:nth-of-type(2) button,
+        div[data-testid="column"]:nth-of-type(3) button,
+        div[data-testid="column"]:nth-of-type(4) button {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            height: 32px !important;
+            font-size: 20px !important;
+            padding: 0 !important;
         }
     }
 
-    /* 顶部图标按钮样式 - 去掉边框，只显示图标 */
-    button[kind="secondary"]:has-text("📥"),
-    button[kind="secondary"]:has-text("💬"),
-    button[kind="secondary"]:has-text("📅") {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        font-size: 24px !important;
-        padding: 5px !important;
-    }
-    /* 通用顶部按钮样式 */
-    div[data-testid="column"]:has(button[kind="secondary"]) button {
+    /* 顶部图标按钮样式 - 完全去掉背景框，只显示图标 */
+    button[key="dl_btn"],
+    button[key="wx_btn"],
+    button[key="pl_btn"],
+    button[aria-label*="Download"],
+    button[aria-label*="下载"] {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         font-size: 24px !important;
         padding: 5px !important;
         color: #1C1C1E !important;
+        min-width: auto !important;
+        width: auto !important;
+    }
+    /* 通用顶部按钮样式 - 覆盖所有可能的按钮，强制去掉背景 */
+    div[data-testid="column"]:nth-child(2) button,
+    div[data-testid="column"]:nth-child(3) button,
+    div[data-testid="column"]:nth-child(4) button,
+    div[data-testid="column"] button[kind="secondary"],
+    div[data-testid="column"] button[kind="primary"],
+    div[data-testid="column"] button[type="button"] {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-size: 24px !important;
+        padding: 5px !important;
+        color: #1C1C1E !important;
+        min-width: auto !important;
+        width: auto !important;
     }
     /* 移动端进一步优化图标按钮 */
     @media (max-width: 768px) {
@@ -335,9 +357,14 @@ st.markdown("""
             border-radius: 10px !important;
         }
     }
-    div[data-testid="column"]:nth-of-type(2) button { background: #007AFF !important; }
-    div[data-testid="column"]:nth-of-type(3) button { background: #34C759 !important; }
-    div[data-testid="column"]:nth-of-type(4) button { background: #FF9500 !important; }
+    /* 移除顶部图标按钮的背景色 */
+    div[data-testid="column"]:nth-of-type(2) button,
+    div[data-testid="column"]:nth-of-type(3) button,
+    div[data-testid="column"]:nth-of-type(4) button {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
 
     /* 4. 生成按钮 (大) */
     .gen-btn button {
@@ -359,11 +386,15 @@ st.markdown("""
     /* 菜名 */
     .dish-label { 
         font-size: 17px; font-weight: 700; color: #1C1C1E; 
-        line-height: 2.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 5px;
+        line-height: 1.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 5px;
+        margin-bottom: 5px;
     }
     
-    /* 菜品图标按钮 - 去掉边框，紧密排列 */
-    .dish-card [data-testid="column"] button {
+    /* 菜品图标按钮 - 完全去掉背景框，紧密排列 */
+    .dish-card [data-testid="column"] button,
+    .dish-card [data-testid="column"] button[kind="secondary"],
+    .dish-card [data-testid="column"] button[kind="primary"],
+    .dish-card [data-testid="column"] button[type="button"] {
         background: transparent !important; 
         border: none !important;
         font-size: 22px !important; 
@@ -373,12 +404,13 @@ st.markdown("""
         margin: 0 !important;
         box-shadow: none !important; 
         color: #8E8E93 !important;
+        min-width: auto !important;
     }
-    /* 喜欢按钮红色 */
-    .dish-card button[kind="secondary"] {
-        color: #8E8E93 !important;
+    /* 喜欢按钮红色 - 通过key识别 */
+    .dish-card button[key*="lk_"] {
+        color: #FF3B30 !important;
     }
-    /* 烹饪按钮蓝色 - 通过key选择 */
+    /* 烹饪按钮蓝色 */
     .dish-card button[key*="ck_"] {
         color: #007AFF !important;
         font-weight: bold !important;
