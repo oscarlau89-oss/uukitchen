@@ -126,6 +126,20 @@ st.markdown("""
     /* 1. 强制页面不出现横向滚动条 */
     .stApp { background-color: #F2F2F7; overflow-x: hidden; }
     .main > div { padding-left: 1rem !important; padding-right: 1rem !important; }
+    /* 移动端进一步减小padding */
+    @media (max-width: 768px) {
+        .main > div { 
+            padding-left: 0.5rem !important; 
+            padding-right: 0.5rem !important; 
+        }
+        /* 确保header容器不超出屏幕 */
+        .element-container:has(.header-box) {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+    }
     h1, h2, h3, h4, p, span, div, button { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
     #MainMenu {visibility: hidden;} footer {visibility: hidden;}
 
@@ -134,6 +148,7 @@ st.markdown("""
         display: flex; align-items: center; justify-content: flex-start;
         padding: 5px 0; margin-top: -50px; margin-bottom: 10px; width: 100%;
         gap: 8px;
+        box-sizing: border-box;
     }
     /* 移动端header优化 */
     @media (max-width: 768px) {
@@ -141,13 +156,20 @@ st.markdown("""
             padding: 5px 0;
             margin-top: -50px;
             margin-bottom: 8px;
-            gap: 6px;
+            gap: 4px !important; /* 减小gap */
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box;
         }
         .header-title {
-            font-size: 18px !important;
-            margin-left: 6px !important;
+            font-size: 15px !important; /* 进一步减小字体 */
+            margin-left: 4px !important;
             flex: 1;
             min-width: 0;
+            max-width: calc(100% - 50px); /* 确保不超出 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     }
     /* 强行锁定图片尺寸，防止变大 */
@@ -175,15 +197,18 @@ st.markdown("""
     
     /* 3. 强制缩小列间距 (解决图标太远问题) */
     [data-testid="column"] { 
-        padding: 0 1px !important; 
+        padding: 0 !important; 
+        margin: 0 !important;
         flex-shrink: 0 !important; /* 防止列收缩 */
     }
     [data-testid="stHorizontalBlock"] { 
-        gap: 0.1rem !important; /* 减小间距 */
+        gap: 0 !important; /* 完全移除间距 */
         display: flex !important; 
         flex-wrap: nowrap !important; /* 强制不换行 */
         width: 100% !important;
         overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
     /* 移动端强制图标一行显示，紧凑排列 */
     @media (max-width: 768px) {
@@ -191,34 +216,69 @@ st.markdown("""
             flex-wrap: nowrap !important;
             display: flex !important;
             width: 100% !important;
-            overflow-x: visible !important;
-            gap: 0.05rem !important; /* 移动端更小的间距 */
+            max-width: 100% !important;
+            overflow-x: hidden !important; /* 防止横向滚动 */
+            gap: 0 !important; /* 完全移除间距 */
             padding: 0 !important;
             margin: 0 !important;
         }
         [data-testid="column"] {
-            padding: 0 1px !important;
+            padding: 0 !important;
             margin: 0 !important;
             flex: 0 0 auto !important;
             min-width: 0 !important;
             max-width: none !important;
             flex-basis: auto !important;
         }
-        /* 顶部header区域：左侧头像+名字占更多空间，右侧图标更紧凑 */
+        /* 顶部header区域：左侧头像+名字更紧凑（覆盖之前的定义） */
         .header-box {
             margin-right: 0 !important;
+            gap: 4px !important; /* 与上面的定义保持一致 */
+            padding: 5px 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box;
+        }
+        .header-title {
+            font-size: 15px !important; /* 与上面的定义保持一致 */
+            margin-left: 4px !important;
+            flex: 1;
+            min-width: 0;
+            max-width: calc(100% - 50px); /* 确保不超出 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .avatar-img {
+            width: 45px !important;
+            height: 45px !important;
+            min-width: 45px !important;
+            flex-shrink: 0 !important;
         }
         /* 图标按钮在移动端更小更紧凑 */
         .icon-btn {
             padding: 0 !important;
             margin: 0 !important;
+            width: 100% !important;
         }
         .icon-btn button {
-            height: 36px !important;
-            font-size: 16px !important;
+            height: 32px !important;
+            font-size: 14px !important;
             padding: 0 !important;
             margin: 0 !important;
-            min-width: 36px !important;
+            min-width: 32px !important;
+            width: 100% !important;
+        }
+        /* 确保列不会超出屏幕 */
+        [data-testid="column"]:nth-child(1) {
+            flex: 0 0 60% !important; /* 左侧头像+名字占60% */
+            max-width: 60% !important;
+        }
+        [data-testid="column"]:nth-child(2),
+        [data-testid="column"]:nth-child(3),
+        [data-testid="column"]:nth-child(4) {
+            flex: 0 0 13.33% !important; /* 每个图标占约13.33% */
+            max-width: 13.33% !important;
         }
     }
 
@@ -588,8 +648,8 @@ if st.session_state.view_mode == "cook" and st.session_state.focus_dish:
 else:
     # 1. 顶部 Header
     # 移动端优化：左侧头像+名字，右侧图标紧凑排列
-    # 使用响应式列布局，移动端自动调整
-    c_prof, c_dl, c_wx, c_pl = st.columns([5, 1.2, 1.2, 1.2], gap="small")
+    # 使用响应式列布局，移动端自动调整，减小左侧宽度，让图标更紧凑
+    c_prof, c_dl, c_wx, c_pl = st.columns([4, 1, 1, 1], gap="small")
     
     with c_prof:
         # 使用本地图片作为头像
