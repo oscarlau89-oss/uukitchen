@@ -370,11 +370,16 @@ st.markdown("""
             padding: 1px 6px !important;
             font-size: 10px !important;
         }
-        /* 生成按钮也缩小 */
+        /* 生成按钮也缩小，但保持美观 */
+        .gen-btn {
+            margin: 5px 0 !important;
+        }
         .gen-btn button {
-            height: 44px !important;
+            height: 46px !important;
             font-size: 16px !important;
-            margin-top: 3px !important;
+            min-width: 180px !important;
+            padding: 0 20px !important;
+            margin: 0 auto !important;
         }
         /* 减小所有不必要的间距 */
         .main > div {
@@ -482,7 +487,7 @@ st.markdown("""
             padding: 0 !important;
             margin: 0 !important;
         }
-        .icon-btn button {
+    .icon-btn button {
             height: 36px !important;
             font-size: 16px !important;
             padding: 0 !important;
@@ -499,13 +504,36 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* 4. 生成按钮 (大) */
+    /* 4. 生成按钮 (美观整洁，居中) */
+    .gen-btn {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin: 8px 0 !important;
+        padding: 0 !important;
+    }
     .gen-btn button {
-        width: 100% !important; height: 54px !important; border-radius: 16px !important;
+        width: auto !important;
+        min-width: 200px !important;
+        max-width: 90% !important;
+        height: 50px !important;
+        border-radius: 12px !important;
         background: linear-gradient(135deg, #FF9500, #FF7B00) !important;
-        color: white !important; font-size: 19px !important; font-weight: 700 !important;
-        border: none !important; box-shadow: 0 6px 18px rgba(255, 159, 28, 0.3) !important;
-        margin-top: 5px;
+        color: white !important;
+        font-size: 18px !important;
+        font-weight: 700 !important;
+        border: 2px solid #FF7B00 !important;
+        box-shadow: 0 4px 12px rgba(255, 159, 28, 0.25) !important;
+        margin: 0 auto !important;
+        padding: 0 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease !important;
+    }
+    .gen-btn button:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 16px rgba(255, 159, 28, 0.35) !important;
     }
 
     /* 5. 菜品卡片 (紧凑) */
@@ -897,7 +925,7 @@ else:
     # 下载、推送、计划图标在第二行，紧密排列，去掉边框
     # 使用HTML直接布局，避免Streamlit列布局的间隔问题
     st.markdown('''
-    <div style="display: flex; gap: 8px; justify-content: flex-start; align-items: center; padding: 5px 0;">
+    <div style="display: flex; gap: 8px; justify-content: flex-start; align-items: center; padding: 5px 0; margin-bottom: 5px;">
         <button id="top-dl-btn" style="background: transparent; border: none; font-size: 24px; padding: 0; cursor: pointer;">📥</button>
         <button id="top-wx-btn" style="background: transparent; border: none; font-size: 24px; padding: 0; cursor: pointer;">💬</button>
         <button id="top-pl-btn" style="background: transparent; border: none; font-size: 24px; padding: 0; cursor: pointer;">📅</button>
@@ -940,9 +968,9 @@ else:
     </script>
     ''', unsafe_allow_html=True)
 
-    # 3. 生成按钮
+    # 3. 生成按钮（美观整洁，居中显示）
     st.markdown('<div class="gen-btn">', unsafe_allow_html=True)
-    if st.button("✨ 生成今日菜单", key="gen_btn"):
+    if st.button("✨ 生成今日菜单", key="gen_btn", use_container_width=False):
         with st.spinner("魔法规划中..."): time.sleep(0.5); generate_full_menu()
     st.markdown('</div>', unsafe_allow_html=True)
 
