@@ -124,6 +124,22 @@ st.markdown("""
     .header-box {
         display: flex; align-items: center; justify-content: flex-start;
         padding: 5px 0; margin-top: -50px; margin-bottom: 10px; width: 100%;
+        gap: 8px;
+    }
+    /* 移动端header优化 */
+    @media (max-width: 768px) {
+        .header-box {
+            padding: 5px 0;
+            margin-top: -50px;
+            margin-bottom: 8px;
+            gap: 6px;
+        }
+        .header-title {
+            font-size: 18px !important;
+            margin-left: 6px !important;
+            flex: 1;
+            min-width: 0;
+        }
     }
     /* 强行锁定图片尺寸，防止变大 */
     .avatar-img { 
@@ -150,33 +166,50 @@ st.markdown("""
     
     /* 3. 强制缩小列间距 (解决图标太远问题) */
     [data-testid="column"] { 
-        padding: 0 2px !important; 
+        padding: 0 1px !important; 
         flex-shrink: 0 !important; /* 防止列收缩 */
     }
     [data-testid="stHorizontalBlock"] { 
-        gap: 0.3rem !important; 
+        gap: 0.1rem !important; /* 减小间距 */
         display: flex !important; 
         flex-wrap: nowrap !important; /* 强制不换行 */
         width: 100% !important;
         overflow: visible !important;
     }
-    /* 移动端强制图标一行显示 */
+    /* 移动端强制图标一行显示，紧凑排列 */
     @media (max-width: 768px) {
         [data-testid="stHorizontalBlock"] {
             flex-wrap: nowrap !important;
             display: flex !important;
             width: 100% !important;
             overflow-x: visible !important;
+            gap: 0.05rem !important; /* 移动端更小的间距 */
+            padding: 0 !important;
+            margin: 0 !important;
         }
         [data-testid="column"] {
+            padding: 0 1px !important;
+            margin: 0 !important;
             flex: 0 0 auto !important;
             min-width: 0 !important;
             max-width: none !important;
             flex-basis: auto !important;
         }
-        /* 针对顶部header的列进行特殊处理 */
-        .element-container:has([data-testid="stHorizontalBlock"]) [data-testid="column"] {
-            flex: 1 1 auto !important;
+        /* 顶部header区域：左侧头像+名字占更多空间，右侧图标更紧凑 */
+        .header-box {
+            margin-right: 0 !important;
+        }
+        /* 图标按钮在移动端更小更紧凑 */
+        .icon-btn {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .icon-btn button {
+            height: 36px !important;
+            font-size: 16px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            min-width: 36px !important;
         }
     }
 
@@ -184,6 +217,8 @@ st.markdown("""
     .icon-btn {
         width: 100% !important;
         min-width: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
     .icon-btn button {
         border-radius: 12px !important; border: none !important;
@@ -194,6 +229,20 @@ st.markdown("""
         box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
         min-width: 0 !important;
         flex-shrink: 0 !important;
+    }
+    /* 移动端进一步优化图标按钮 */
+    @media (max-width: 768px) {
+        .icon-btn {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .icon-btn button {
+            height: 36px !important;
+            font-size: 16px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border-radius: 10px !important;
+        }
     }
     div[data-testid="column"]:nth-of-type(2) button { background: #007AFF !important; }
     div[data-testid="column"]:nth-of-type(3) button { background: #34C759 !important; }
@@ -451,8 +500,18 @@ def exit_cook_mode():
 
 # 侧边栏
 with st.sidebar:
-    # 使用CSS创建圆形头像，直接显示emoji
-    st.markdown('<div style="width:80px;height:80px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;margin:0 auto;box-shadow:0 2px 8px rgba(0,0,0,0.1);line-height:1;">🦴</div>', unsafe_allow_html=True)
+    # 使用真实的布鲁伊头像
+    bluey_sidebar_urls = [
+        "https://static.wikia.nocookie.net/bluey/images/4/4e/Bluey_Heeler.png/revision/latest/scale-to-width-down/200?cb=20210801071234",
+        "https://upload.wikimedia.org/wikipedia/en/1/17/Bluey_Heeler.png"
+    ]
+    try:
+        st.image(bluey_sidebar_urls[0], width=80, use_container_width=False)
+    except:
+        try:
+            st.image(bluey_sidebar_urls[1], width=80, use_container_width=False)
+        except:
+            st.markdown('<div style="width:80px;height:80px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;margin:0 auto;box-shadow:0 2px 8px rgba(0,0,0,0.1);line-height:1;">🦴</div>', unsafe_allow_html=True)
     
     with st.expander("📝 档案设置 (含过敏原)", expanded=True):
         u = st.session_state.user_data
@@ -522,16 +581,44 @@ if st.session_state.view_mode == "cook" and st.session_state.focus_dish:
 # 仪表盘
 else:
     # 1. 顶部 Header
-    # 为保证不换行，左侧给 4.5 份宽度，右侧图标各 1.5 份
-    c_prof, c_dl, c_wx, c_pl = st.columns([4.5, 1.5, 1.5, 1.5])
+    # 移动端优化：左侧头像+名字，右侧图标紧凑排列
+    # 使用响应式列布局，移动端自动调整
+    c_prof, c_dl, c_wx, c_pl = st.columns([5, 1.2, 1.2, 1.2], gap="small")
     
     with c_prof:
-        # 使用CSS创建圆形头像，直接显示emoji，不依赖外部图片
+        # 使用真实的布鲁伊头像，多个备用URL确保显示
+        bluey_avatar_urls = [
+            "https://static.wikia.nocookie.net/bluey/images/4/4e/Bluey_Heeler.png/revision/latest/scale-to-width-down/200?cb=20210801071234",
+            "https://upload.wikimedia.org/wikipedia/en/1/17/Bluey_Heeler.png",
+            "https://www.pngall.com/wp-content/uploads/2023/04/Bluey-PNG-Image.png"
+        ]
         st.markdown(f'''
         <div class="header-box">
-            <div style="width:50px;height:50px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.1);flex-shrink:0;line-height:1;">🦴</div>
+            <img src="{bluey_avatar_urls[0]}" 
+                 class="avatar-img" 
+                 alt="Bluey"
+                 style="object-fit: cover; background: linear-gradient(135deg, #FF9500, #FF7B00);">
+            <div style="width:50px;height:50px;background:linear-gradient(135deg, #FF9500, #FF7B00);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:28px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.1);flex-shrink:0;" id="bluey-fallback">🦴</div>
             <div class="header-title">Hi, {st.session_state.user_data["nickname"]}</div>
         </div>
+        <script>
+        (function() {{
+            var img = document.querySelector('.header-box .avatar-img');
+            var fallback = document.getElementById('bluey-fallback');
+            if (img) {{
+                img.addEventListener('error', function() {{
+                    if (this.src === '{bluey_avatar_urls[0]}') {{
+                        this.src = '{bluey_avatar_urls[1]}';
+                    }} else if (this.src === '{bluey_avatar_urls[1]}') {{
+                        this.src = '{bluey_avatar_urls[2]}';
+                    }} else {{
+                        this.style.display = 'none';
+                        if (fallback) fallback.style.display = 'flex';
+                    }}
+                }});
+            }}
+        }})();
+        </script>
         ''', unsafe_allow_html=True)
     
     with c_dl:
