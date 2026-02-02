@@ -936,7 +936,7 @@ else:
     
     # 下载、推送、计划图标 - 使用纯HTML/CSS布局，完全控制间距
     # 创建隐藏的Streamlit按钮用于触发功能
-        if st.session_state.menu_state['breakfast']:
+    if st.session_state.menu_state['breakfast']:
         st.download_button("", data=create_menu_card_image(st.session_state.menu_state, st.session_state.user_data['nickname']), file_name="menu.png", key="dl_btn_hidden", use_container_width=False, label_visibility="hidden")
     else:
         st.button("", disabled=True, key="dl_btn_hidden", use_container_width=False, label_visibility="hidden")
@@ -1068,4 +1068,4 @@ else:
         with st.expander("📜 历史收藏"):
             for h in load_history()[:5]:
                 lunch_str = h["menu"]["lunch"][0] if h["menu"]["lunch"] and len(h["menu"]["lunch"]) > 0 else "未设置"
-                st.markdown(f'<div class="hist-card"><div class="hist-head">📅 {h["date"]}</div><div class="hist-txt">🌅 {h["menu"]["breakfast"]}<br>☀️ {lunch_str}...</div></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="hist-card"><div class="hist-head">📅 {h["date"]}</div><div class="hist-txt">🌅 {h["menu"]["breakfast"]}<br>☀️ {lunch_str}...</div></div>', unsafe_allow_html=True)# 临时文件，用于修复缩进
