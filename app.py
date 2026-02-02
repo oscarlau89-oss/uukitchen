@@ -246,13 +246,15 @@ st.markdown("""
         font-weight: bold !important;
     }
     [data-testid="stHorizontalBlock"] { 
-        gap: 0 !important; /* 完全移除间距 */
+        gap: 2px !important; /* 桌面端小间距 */
         display: flex !important; 
         flex-wrap: nowrap !important; /* 强制不换行 */
         width: 100% !important;
+        max-width: 100% !important;
         overflow: visible !important;
         padding: 0 !important;
         margin: 0 !important;
+        box-sizing: border-box !important;
     }
     /* 移动端强制图标一行显示，紧凑排列 */
     @media (max-width: 768px) {
@@ -324,58 +326,69 @@ st.markdown("""
             padding-left: 5px;
             margin-bottom: 3px;
         }
-        /* 确保菜品图标按钮容器紧密排列 - 移动端极紧凑 */
-        .dish-card [data-testid="stHorizontalBlock"] {
+        /* 移动端：图标自适应屏幕大小，确保一页显示 */
+        /* 确保所有容器不超出屏幕 */
+        [data-testid="stHorizontalBlock"] {
             gap: 0 !important;
             padding: 0 !important;
             margin: 0 !important;
-        }
-        .dish-card [data-testid="column"] {
-            padding: 0 !important;
-            margin: 0 !important;
-            flex: 1 1 0 !important; /* 平均分配空间 */
-            min-width: 0 !important;
-            max-width: 25% !important; /* 每个按钮最多25% */
-        }
-        .dish-card [data-testid="column"] button {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            font-size: 20px !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            min-width: 0 !important;
             width: 100% !important;
-            height: 36px !important;
+            max-width: 100vw !important;
+            box-sizing: border-box !important;
         }
-        /* 顶部图标按钮也去掉边框，紧密排列 */
+        [data-testid="column"] {
+            padding: 0 !important;
+            margin: 0 !important;
+            flex: 1 1 0 !important;
+            min-width: 0 !important;
+            max-width: 33.33% !important; /* 顶部3个图标，每个33.33% */
+            flex-basis: 0 !important;
+            box-sizing: border-box !important;
+        }
+        /* 顶部图标按钮 - 自适应屏幕大小 */
         button[key="dl_btn"],
         button[key="wx_btn"],
         button[key="pl_btn"] {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            font-size: 20px !important;
+            font-size: 5vw !important; /* 使用vw单位自适应 */
             padding: 0 !important;
             margin: 0 !important;
-        }
-        /* 顶部按钮容器也缩小 - 移动端极紧凑 */
-        [data-testid="stHorizontalBlock"] {
-            gap: 0 !important;
-        }
-        [data-testid="column"] {
-            padding: 0 !important;
-            margin: 0 !important;
-            flex: 1 1 0 !important; /* 平均分配空间，不扩展 */
+            width: 100% !important;
+            height: auto !important;
             min-width: 0 !important;
-            max-width: 33.33% !important; /* 每个按钮最多33.33% */
-            flex-basis: 0 !important; /* 从0开始分配 */
+            max-width: 100% !important;
         }
-        /* 菜品图标按钮列也使用相同策略 */
+        /* 菜品图标按钮容器 - 自适应屏幕大小 */
+        .dish-card [data-testid="stHorizontalBlock"] {
+            gap: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100vw !important;
+            box-sizing: border-box !important;
+        }
         .dish-card [data-testid="column"] {
+            padding: 0 !important;
+            margin: 0 !important;
             flex: 1 1 0 !important;
-            max-width: 25% !important; /* 每个按钮最多25% */
+            min-width: 0 !important;
+            max-width: 25% !important; /* 4个图标，每个25% */
             flex-basis: 0 !important;
+            box-sizing: border-box !important;
+        }
+        .dish-card [data-testid="column"] button {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            font-size: 4.5vw !important; /* 使用vw单位自适应 */
+            padding: 0 !important;
+            margin: 0 !important;
+            min-width: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            max-width: 100% !important;
         }
         /* 移动端：进一步减小卡片间距和内部空间 */
         .dish-card {
