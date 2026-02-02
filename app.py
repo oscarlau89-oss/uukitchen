@@ -313,22 +313,42 @@ st.markdown("""
             max-width: 33.33% !important;
             box-sizing: border-box !important;
         }
-        /* 顶部3个图标按钮 */
+        /* 顶部3个图标按钮容器 - 固定小尺寸 */
+        [data-testid="column"] [data-testid="stButton"],
+        [data-testid="column"] [data-testid="stDownloadButton"] {
+            width: 32px !important;
+            min-width: 32px !important;
+            max-width: 32px !important;
+            padding: 0 !important;
+            margin: 0 auto !important;
+        }
+        /* 顶部3个图标按钮 - 固定小尺寸，缩短白框 */
         button[key="dl_btn"],
         button[key="wx_btn"],
         button[key="pl_btn"],
         button[key="dl_btn_disabled"],
-        button[data-testid="baseButton-download"][key="dl_btn"] {
-            width: 100% !important;
-            min-width: 0 !important;
-            max-width: 100% !important;
-            padding: 4px 2px !important;
+        button[data-testid="baseButton-download"][key="dl_btn"],
+        [data-testid="column"] button[key="dl_btn"],
+        [data-testid="column"] button[key="wx_btn"],
+        [data-testid="column"] button[key="pl_btn"],
+        [data-testid="column"] button[key="dl_btn_disabled"],
+        [data-testid="column"] [data-testid="stButton"] > button,
+        [data-testid="column"] [data-testid="stDownloadButton"] > button {
+            width: 32px !important;
+            min-width: 32px !important;
+            max-width: 32px !important;
+            height: 32px !important;
+            padding: 0 !important;
             margin: 0 !important;
-            font-size: 4vw !important;
+            font-size: 20px !important;
             line-height: 1 !important;
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 16px !important;
         }
         /* 菜品卡片的4个图标列 */
         .dish-card [data-testid="stHorizontalBlock"] {
@@ -340,28 +360,50 @@ st.markdown("""
             box-sizing: border-box !important;
         }
         .dish-card [data-testid="column"] {
-            padding: 0 1px !important;
+            padding: 0 2px !important;
             margin: 0 !important;
-            flex: 1 1 0 !important;
+            flex: 0 0 auto !important;
             min-width: 0 !important;
-            max-width: 25% !important;
+            max-width: none !important;
+            width: auto !important;
             box-sizing: border-box !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
         }
-        /* 菜品4个图标按钮 */
+        /* 菜品4个图标按钮容器 - 固定小尺寸 */
+        .dish-card [data-testid="column"] [data-testid="stButton"] {
+            width: 28px !important;
+            min-width: 28px !important;
+            max-width: 28px !important;
+            padding: 0 !important;
+            margin: 0 auto !important;
+        }
+        /* 菜品4个图标按钮 - 固定小尺寸，缩短白框 */
         .dish-card button[key*="lk_"],
         .dish-card button[key*="dl_"],
         .dish-card button[key*="ck_"],
-        .dish-card button[key*="sw_"] {
-            width: 100% !important;
-            min-width: 0 !important;
-            max-width: 100% !important;
-            padding: 4px 2px !important;
+        .dish-card button[key*="sw_"],
+        .dish-card [data-testid="column"] button[key*="lk_"],
+        .dish-card [data-testid="column"] button[key*="dl_"],
+        .dish-card [data-testid="column"] button[key*="ck_"],
+        .dish-card [data-testid="column"] button[key*="sw_"],
+        .dish-card [data-testid="column"] [data-testid="stButton"] > button {
+            width: 28px !important;
+            min-width: 28px !important;
+            max-width: 28px !important;
+            height: 28px !important;
+            padding: 0 !important;
             margin: 0 !important;
-            font-size: 3.5vw !important;
+            font-size: 18px !important;
             line-height: 1 !important;
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 14px !important;
         }
         /* 菜品标签样式 */
         .dish-label {
@@ -678,51 +720,6 @@ st.markdown("""
         margin: 0 !important;
     }
 
-    /* 顶部 3 个图标：缩短白框长度，并让图标居中 */
-    [data-testid="column"] .stButton > button[key="dl_btn"],
-    [data-testid="column"] .stButton > button[key="dl_btn_disabled"],
-    [data-testid="column"] .stButton > button[key="wx_btn"],
-    [data-testid="column"] .stButton > button[key="pl_btn"] {
-        background-color: transparent !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-
-        min-width: 32px !important;
-        width: 32px !important;
-        height: 32px !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        border-radius: 16px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        line-height: 1 !important;
-        font-size: 20px !important;
-    }
-
-    /* 菜卡片里 4 个图标：白框缩小，图标居中 */
-    .dish-card .stButton > button[key*="lk_"],
-    .dish-card .stButton > button[key*="dl_"],
-    .dish-card .stButton > button[key*="ck_"],
-    .dish-card .stButton > button[key*="sw_"] {
-        background-color: transparent !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-
-        min-width: 28px !important;
-        width: 28px !important;
-        height: 28px !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        border-radius: 14px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        line-height: 1 !important;
-        font-size: 18px !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
