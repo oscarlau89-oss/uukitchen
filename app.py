@@ -68,8 +68,11 @@ def save_user_data():
 
 def load_history():
     if os.path.exists(HISTORY_FILE):
-        try: with open(HISTORY_FILE, "r", encoding="utf-8") as f: return json.load(f)
-        except: return []
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            return []
     return []
 
 def save_history_item(menu_state):
@@ -77,10 +80,18 @@ def save_history_item(menu_state):
     item = {
         "date": datetime.datetime.now().strftime("%Y-%m-%d"),
         "menu": {
-            "breakfast": menu_state['breakfast']['name'],
-            "lunch": [menu_state['lunch_meat']['name'], menu_state['lunch_veg']['name'], menu_state['lunch_soup']['name']],
-            "dinner": [menu_state['dinner_meat']['name'], menu_state['dinner_veg']['name'], menu_state['dinner_soup']['name']],
-            "fruit": menu_state['fruit']
+            "breakfast": menu_state['breakfast']['name'] if menu_state['breakfast'] else "未设置",
+            "lunch": [
+                menu_state['lunch_meat']['name'] if menu_state['lunch_meat'] else "未设置",
+                menu_state['lunch_veg']['name'] if menu_state['lunch_veg'] else "未设置",
+                menu_state['lunch_soup']['name'] if menu_state['lunch_soup'] else "未设置"
+            ],
+            "dinner": [
+                menu_state['dinner_meat']['name'] if menu_state['dinner_meat'] else "未设置",
+                menu_state['dinner_veg']['name'] if menu_state['dinner_veg'] else "未设置",
+                menu_state['dinner_soup']['name'] if menu_state['dinner_soup'] else "未设置"
+            ],
+            "fruit": menu_state['fruit'] if menu_state['fruit'] else "未设置"
         }
     }
     history.insert(0, item)
@@ -186,6 +197,9 @@ st.markdown("""
 
     /* 历史 & 清单 */
     .hist-item { background: white; border-radius: 12px; padding: 12px; margin-bottom: 8px; border-left: 4px solid #FF9500; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+    .hist-card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 8px; border-left: 4px solid #FF9500; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+    .hist-head { font-weight: 700; color: #1C1C1E; font-size: 15px; margin-bottom: 5px; }
+    .hist-txt { color: #666; font-size: 13px; line-height: 1.6; }
     .receipt-card { background: #FFF; padding: 15px; border: 1px dashed #DDD; border-radius: 10px; font-size: 14px; text-align: center; margin-top: 15px;}
 </style>
 """, unsafe_allow_html=True)
@@ -208,15 +222,21 @@ def toggle_feedback(dish_name, action):
     likes = st.session_state.user_data['likes']
     dislikes = st.session_state.user_data['dislikes']
     if action == 'like':
-        if dish_name in likes: likes.remove(dish_name)
+        if dish_name in likes:
+            likes.remove(dish_name)
         else: 
-            if dish_name not in likes: likes.append(dish_name)
-            if dish_name in dislikes: dislikes.remove(dish_name)
+            if dish_name not in likes:
+                likes.append(dish_name)
+            if dish_name in dislikes:
+                dislikes.remove(dish_name)
     elif action == 'dislike':
-        if dish_name in dislikes: dislikes.remove(dish_name)
+        if dish_name in dislikes:
+            dislikes.remove(dish_name)
         else:
-            if dish_name not in dislikes: dislikes.append(dish_name)
-            if dish_name in likes: likes.remove(dish_name)
+            if dish_name not in dislikes:
+                dislikes.append(dish_name)
+            if dish_name in likes:
+                likes.remove(dish_name)
     save_user_data()
 
 def restock_from_shopping_list():
@@ -244,19 +264,21 @@ def get_random_dish(pool, fridge, allergens, exclude_names=[], prefer_type=None)
         if not is_safe: continue
         if prefer_type == "white_meat":
             if any(ing in RED_MEAT for ing in d['ingredients']): continue
-            
+        
         miss = sum(1 for ing in d['ingredients'] if normalize_ingredient(ing) not in norm_fridge)
         dc = d.copy(); dc['missing_count'] = miss
         safe.append(dc)
     
     if not safe: return None
     tier0 = [d for d in safe if d['missing_count'] == 0]
-    final = tier0 if tier0 else safe # 只推荐全匹配的，除非没有
+    tier1 = [d for d in safe if d['missing_count'] == 1]
+    tier2 = [d for d in safe if d['missing_count'] > 1]
+    final_pool = tier0 if tier0 else (tier1 if tier1 else tier2)
     
     likes = st.session_state.user_data['likes']
     dislikes = st.session_state.user_data['dislikes']
     weighted = []
-    for d in final:
+    for d in final_pool:
         score = 10
         if d.get('missing_count') == 0: score += 50
         if d['name'] in likes: score += 100
@@ -265,7 +287,10 @@ def get_random_dish(pool, fridge, allergens, exclude_names=[], prefer_type=None)
     return random.choice(weighted) if weighted else None
 
 def generate_full_menu():
-    fridge = st.session_state.user_data['fridge_items']; allergies = st.session_state.user_data['allergens']; ms = st.session_state.menu_state
+    fridge = st.session_state.user_data['fridge_items']
+    allergies = st.session_state.user_data['allergens']
+    ms = st.session_state.menu_state
+    
     ms['breakfast'] = get_random_dish(RECIPES_DB['breakfast'], fridge, allergies)
     ms['lunch_meat'] = get_random_dish(RECIPES_DB['lunch_meat'], fridge, allergies)
     ms['lunch_veg'] = get_random_dish(RECIPES_DB['lunch_veg'], fridge, allergies)
@@ -277,11 +302,15 @@ def generate_full_menu():
     pool_dv = RECIPES_DB.get('dinner_veg', []) or RECIPES_DB['lunch_veg']
     pref = "white_meat" if is_red else None
     
-    ms['dinner_meat'] = get_random_dish(pool_dm, fridge, allergies, [ms['lunch_meat']['name']], pref) or get_random_dish(pool_dm, fridge, allergies, [ms['lunch_meat']['name']])
+    exclude_lunch_meat = [ms['lunch_meat']['name']] if ms['lunch_meat'] else []
+    exclude_lunch_soup = [ms['lunch_soup']['name']] if ms['lunch_soup'] else []
+    ms['dinner_meat'] = get_random_dish(pool_dm, fridge, allergies, exclude_lunch_meat, pref) or get_random_dish(pool_dm, fridge, allergies, exclude_lunch_meat)
     ms['dinner_veg'] = get_random_dish(pool_dv, fridge, allergies)
-    ms['dinner_soup'] = get_random_dish(RECIPES_DB['soup'], fridge, allergies, [ms['lunch_soup']['name']])
+    ms['dinner_soup'] = get_random_dish(RECIPES_DB['soup'], fridge, allergies, exclude_lunch_soup)
     ms['fruit'] = random.choice(RECIPES_DB['fruit'])
-    update_shopping_list(); st.session_state.view_mode = "dashboard"
+    
+    update_shopping_list()
+    st.session_state.view_mode = "dashboard"
 
 def update_shopping_list():
     norm_fridge = set([normalize_ingredient(i) for i in st.session_state.user_data['fridge_items']])
@@ -290,64 +319,109 @@ def update_shopping_list():
     for k, d in ms.items():
         if isinstance(d, dict):
             for ing in d.get('ingredients', []):
-                if normalize_ingredient(ing) not in norm_fridge: needed.add(ing)
+                if normalize_ingredient(ing) not in norm_fridge:
+                    needed.add(ing)
     st.session_state.menu_state['shopping_list'] = list(needed)
 
 def swap_dish(key, pool_key):
-    fridge = st.session_state.user_data['fridge_items']; allergies = st.session_state.user_data['allergens']
-    curr = st.session_state.menu_state[key]; exclude = [curr['name']] if curr else []
+    fridge = st.session_state.user_data['fridge_items']
+    allergies = st.session_state.user_data['allergens']
+    current = st.session_state.menu_state[key]
+    exclude = [current['name']] if current else []
+    
     pool = RECIPES_DB.get(pool_key, [])
     if 'meat' in pool_key and not pool: pool = RECIPES_DB['lunch_meat']
     if 'veg' in pool_key and not pool: pool = RECIPES_DB['lunch_veg']
+    
     new_d = get_random_dish(pool, fridge, allergies, exclude)
-    if new_d: st.session_state.menu_state[key] = new_d; update_shopping_list()
+    if new_d:
+        st.session_state.menu_state[key] = new_d
+        update_shopping_list()
 
 def create_menu_card_image(menu, nickname):
     width, height = 800, 1200
     img = Image.new('RGB', (width, height), color='#FFFDF5')
     draw = ImageDraw.Draw(img)
-    title_font = get_pil_font(60); header_font = get_pil_font(40); text_font = get_pil_font(30); small_font = get_pil_font(24)
+    title_font = get_pil_font(60)
+    header_font = get_pil_font(40)
+    text_font = get_pil_font(30)
+    small_font = get_pil_font(24)
+    
     draw.rectangle([30, 30, 770, 1170], outline="#FF9500", width=5)
     draw.text((400, 120), f"{nickname} 的今日食谱", font=title_font, fill='#FF9500', anchor="mm")
+    
     y = 260
     def add_sec(title, dishes):
         nonlocal y
-        draw.text((400, y), f"• {title} •", font=header_font, fill='#333', anchor="mm"); y += 75
-        for d in dishes: draw.text((400, y), d, font=text_font, fill='#555', anchor="mm"); y += 55
+        draw.text((400, y), f"• {title} •", font=header_font, fill='#333', anchor="mm")
+        y += 75
+        for d in dishes:
+            draw.text((400, y), d, font=text_font, fill='#555', anchor="mm")
+            y += 55
         y += 40
-    add_sec("早餐", [menu['breakfast']['name'], "🥛 热牛奶"])
-    add_sec("午餐", [menu['lunch_meat']['name'], menu['lunch_veg']['name'], menu['lunch_soup']['name']])
-    add_sec("晚餐", [menu['dinner_meat']['name'], menu['dinner_veg']['name'], menu['dinner_soup']['name']])
-    add_sec("今日水果", [menu['fruit']])
-    buf = io.BytesIO(); img.save(buf, format="PNG"); return buf.getvalue()
+        
+    add_sec("早餐", [menu['breakfast']['name'] if menu['breakfast'] else "未设置", "🥛 热牛奶"])
+    add_sec("午餐", [
+        menu['lunch_meat']['name'] if menu['lunch_meat'] else "未设置",
+        menu['lunch_veg']['name'] if menu['lunch_veg'] else "未设置",
+        menu['lunch_soup']['name'] if menu['lunch_soup'] else "未设置"
+    ])
+    add_sec("晚餐", [
+        menu['dinner_meat']['name'] if menu['dinner_meat'] else "未设置",
+        menu['dinner_veg']['name'] if menu['dinner_veg'] else "未设置",
+        menu['dinner_soup']['name'] if menu['dinner_soup'] else "未设置"
+    ])
+    add_sec("今日水果", [menu['fruit'] if menu['fruit'] else "未设置"])
+    
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
 
-def send_to_wechat(): st.toast("✅ 已推送到微信")
-def generate_weekly(): st.toast("✅ 周计划已生成")
-def enter_cook_mode(dish): st.session_state.focus_dish = dish; st.session_state.view_mode = "cook"
-def exit_cook_mode(): st.session_state.view_mode = "dashboard"
+def send_to_wechat():
+    token = st.session_state.user_data['pushplus_token']
+    if not token: 
+        st.error("🚫 请在侧边栏填写 Token")
+        return
+    ms = st.session_state.menu_state
+    if not ms['breakfast']: return
+    content = f"<h1>{st.session_state.user_data['nickname']} 今日食谱</h1><hr><h3>🌅 早餐</h3><p>{ms['breakfast']['name'] if ms['breakfast'] else '未设置'}</p><h3>☀️ 午餐</h3><p>{ms['lunch_meat']['name'] if ms['lunch_meat'] else '未设置'}<br>{ms['lunch_veg']['name'] if ms['lunch_veg'] else '未设置'}<br>{ms['lunch_soup']['name'] if ms['lunch_soup'] else '未设置'}</p><h3>🌙 晚餐</h3><p>{ms['dinner_meat']['name'] if ms['dinner_meat'] else '未设置'}<br>{ms['dinner_veg']['name'] if ms['dinner_veg'] else '未设置'}<br>{ms['dinner_soup']['name'] if ms['dinner_soup'] else '未设置'}</p><p>🍎 加餐：{ms['fruit'] if ms['fruit'] else '未设置'}</p><hr><p>🛒 待买：{', '.join(ms['shopping_list']) if ms['shopping_list'] else '无'}</p>"
+    data = {"token": token, "title": f"食谱-{st.session_state.user_data['nickname']}", "content": content, "template": "html"}
+    try: requests.post('http://www.pushplus.plus/send', json=data, timeout=5); st.success("✅ 已推送")
+    except: st.error("❌ 推送失败")
+
+def generate_weekly():
+    st.toast("✅ 周计划已生成")
+
+def enter_cook_mode(dish):
+    st.session_state.focus_dish = dish
+    st.session_state.view_mode = "cook"
+
+def exit_cook_mode():
+    st.session_state.view_mode = "dashboard"
 
 # ==========================================
-# 5. UI 渲染 (Dashboard)
+# 5. UI 渲染 (View)
 # ==========================================
 
 # 侧边栏
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/en/1/17/Bluey_Heeler.png", width=100) # 使用稳定公网图片
-    with st.expander("📝 档案与过敏原", expanded=True):
+    st.image("https://upload.wikimedia.org/wikipedia/en/1/17/Bluey_Heeler.png", width=80)
+    
+    with st.expander("📝 档案设置 (含过敏原)", expanded=True):
         u = st.session_state.user_data
         u['nickname'] = st.text_input("昵称", u['nickname'])
         c1, c2 = st.columns(2)
         st.session_state.user_data['height'] = c1.text_input("身高", st.session_state.user_data.get('height',''))
         st.session_state.user_data['weight'] = c2.text_input("体重", st.session_state.user_data.get('weight',''))
         
-        st.markdown("**🚫 过敏原**")
+        st.markdown("**🚫 过敏原 (自动过滤)**")
         default_al = ["牛奶", "奶粉", "牛肉", "鸡蛋", "虾", "鱼", "花生", "麦麸"]
         cur_al = st.session_state.user_data.get('allergens', [])
         sel_al = st.multiselect("选择", default_al, default=[x for x in cur_al if x in default_al])
-        cust_al = st.text_input("自定义", value=",".join([x for x in cur_al if x not in default_al]))
+        cust_al = st.text_input("其他 (逗号分隔)", value=",".join([x for x in cur_al if x not in default_al]))
         
         st.session_state.user_data['pushplus_token'] = st.text_input("Token", st.session_state.user_data['pushplus_token'], type="password")
-        if st.button("💾 保存档案"):
+        if st.button("保存档案"):
             final = sel_al
             if cust_al: final.extend([x.strip() for x in cust_al.split(',') if x.strip()])
             st.session_state.user_data['allergens'] = list(set(final))
@@ -358,8 +432,13 @@ with st.sidebar:
         img = st.camera_input("拍照", label_visibility="collapsed")
         if img: 
             items = mock_ocr_process(img)
-            cur = set(st.session_state.user_data['fridge_items']); cur.update(items)
-            st.session_state.user_data['fridge_items'] = list(cur); save_user_data(); st.rerun()
+            cur = set(st.session_state.user_data['fridge_items'])
+            cur.update(items)
+            st.session_state.user_data['fridge_items'] = list(cur)
+            save_user_data()
+            st.success(f"已入库: {','.join(items)}")
+            time.sleep(1)
+            st.rerun()
         
         cur_f = st.session_state.user_data['fridge_items']
         new_f_std = []
@@ -367,14 +446,17 @@ with st.sidebar:
             st.markdown(f"**{c}**")
             new_f_std.extend(st.multiselect(c, l, default=[x for x in l if x in cur_f], key=f"f_{c}", label_visibility="collapsed"))
         
+        all_std = [x for l in FRIDGE_CATEGORIES.values() for x in l]
+        cust = [x for x in cur_f if x not in all_std]
         st.markdown("**📝 其他**")
-        cust_list = [x for x in cur_f if not any(x in l for l in FRIDGE_CATEGORIES.values())]
-        kept_cust = st.multiselect("自定义", cust_list, default=cust_list, key="f_cust", label_visibility="collapsed")
+        kept_cust = st.multiselect("自定义", cust, default=cust, key="f_cust", label_visibility="collapsed")
         new_in = st.text_input("新增")
         if st.button("更新库存"):
             final = new_f_std + kept_cust
             if new_in: final.extend([x.strip() for x in new_in.split(',') if x.strip()])
-            st.session_state.user_data['fridge_items'] = list(set(final)); save_user_data(); st.rerun()
+            st.session_state.user_data['fridge_items'] = list(set(final))
+            save_user_data()
+            st.rerun()
 
 # 烹饪模式
 if st.session_state.view_mode == "cook" and st.session_state.focus_dish:
@@ -392,33 +474,30 @@ if st.session_state.view_mode == "cook" and st.session_state.focus_dish:
 
 # 仪表盘
 else:
-    # 1. Header (强制 4.5:1.5:1.5:1.5 布局)
-    # 左侧：头像+昵称
-    # 右侧：三个图标
-    c1, c2, c3, c4 = st.columns([4.5, 1.5, 1.5, 1.5])
+    # 1. 顶部 Header
+    # 为保证不换行，左侧给 4.5 份宽度，右侧图标各 1.5 份
+    c_prof, c_dl, c_wx, c_pl = st.columns([4.5, 1.5, 1.5, 1.5])
     
-    with c1:
+    with c_prof:
         st.markdown(f'''
-        <div class="header-wrapper">
-            <div class="header-left">
-                <img src="https://upload.wikimedia.org/wikipedia/en/1/17/Bluey_Heeler.png" class="header-img">
-                <div class="header-title">Hi, {st.session_state.user_data["nickname"]}</div>
-            </div>
+        <div class="header-box">
+            <img src="https://upload.wikimedia.org/wikipedia/en/1/17/Bluey_Heeler.png" class="avatar-img">
+            <div class="header-title">Hi, {st.session_state.user_data["nickname"]}</div>
         </div>
         ''', unsafe_allow_html=True)
     
-    with c2:
-        st.markdown('<div class="icon-btn">', unsafe_allow_html=True)
+    with c_dl:
+        st.markdown('<div class="icon-btn" style="background:#007AFF !important;">', unsafe_allow_html=True)
         if st.session_state.menu_state['breakfast']:
             st.download_button("📥", data=create_menu_card_image(st.session_state.menu_state, st.session_state.user_data['nickname']), file_name="menu.png", key="dl_btn")
         else: st.button("📥", disabled=True, key="dl_btn")
         st.markdown('</div>', unsafe_allow_html=True)
-    with c3:
-        st.markdown('<div class="icon-btn">', unsafe_allow_html=True)
-        st.button("💬", on_click=lambda: st.toast("✅ 已发送"), key="wx_btn")
+    with c_wx:
+        st.markdown('<div class="icon-btn" style="background:#34C759 !important;">', unsafe_allow_html=True)
+        st.button("💬", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn")
         st.markdown('</div>', unsafe_allow_html=True)
-    with c4:
-        st.markdown('<div class="icon-btn">', unsafe_allow_html=True)
+    with c_pl:
+        st.markdown('<div class="icon-btn" style="background:#FF9500 !important;">', unsafe_allow_html=True)
         st.button("📅", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn")
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -428,18 +507,18 @@ else:
         with st.spinner("魔法规划中..."): time.sleep(0.5); generate_full_menu()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 4. 卡片渲染
+    # 4. 渲染卡片
     def render_card(title, bg_class, keys, pool_keys):
-        st.markdown(f'<div class="dish-card-ios"><div class="card-banner {bg_class}">{title}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="dish-card"><div class="card-banner {bg_class}">{title}</div>', unsafe_allow_html=True)
         for idx, k in enumerate(keys):
             d = st.session_state.menu_state[k]
             if not d: continue
             is_l = d['name'] in st.session_state.user_data['likes']
             is_dl = d['name'] in st.session_state.user_data['dislikes']
             
-            # Row Layout: Name(3.5) + 4 Buttons (1.2 each)
+            # Row Layout: 菜名(3.5) + 4个按钮(1.2 each)
             cn, b1, b2, b3, b4 = st.columns([3.5, 1.2, 1.2, 1.2, 1.2])
-            with cn: st.markdown(f'<div class="name-label">{d["name"]}</div>', unsafe_allow_html=True)
+            with cn: st.markdown(f'<div class="dish-label">{d["name"]}</div>', unsafe_allow_html=True)
             with b1: 
                 st.markdown(f'<div class="mini-icon-btn {"btn-red" if is_l else ""}">', unsafe_allow_html=True)
                 if st.button("❤️" if is_l else "🙂", key=f"lk_{k}"): toggle_feedback(d['name'], 'like'); st.rerun()
@@ -461,7 +540,7 @@ else:
             nf = [normalize_ingredient(i) for i in st.session_state.user_data['fridge_items']]
             ing_html = "".join([f'<span class="pill {"pill-hit" if normalize_ingredient(i) in nf else ""}">{i}</span>' for i in d['ingredients']])
             st.markdown(f'<div class="ing-scroll">{ing_html}</div>', unsafe_allow_html=True)
-            if k != keys[-1]: st.markdown("<hr style='margin:0 15px; border:0; border-top:1px solid #F2F2F7;'>", unsafe_allow_html=True)
+            if k != keys[-1]: st.markdown("<hr style='margin:0 15px; border:0; border-top:1px solid #F0F0F0;'>", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.menu_state['breakfast']:
@@ -476,4 +555,5 @@ else:
         
         with st.expander("📜 历史收藏"):
             for h in load_history()[:5]:
-                st.markdown(f'<div class="hist-card"><div class="hist-head">📅 {h["date"]}</div><div class="hist-txt">🌅 {h["menu"]["breakfast"]}<br>☀️ {h["menu"]["lunch"][0]}...</div></div>', unsafe_allow_html=True)
+                lunch_str = h["menu"]["lunch"][0] if h["menu"]["lunch"] and len(h["menu"]["lunch"]) > 0 else "未设置"
+                st.markdown(f'<div class="hist-card"><div class="hist-head">📅 {h["date"]}</div><div class="hist-txt">🌅 {h["menu"]["breakfast"]}<br>☀️ {lunch_str}...</div></div>', unsafe_allow_html=True)
