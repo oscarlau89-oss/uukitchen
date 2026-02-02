@@ -205,17 +205,45 @@ st.markdown("""
         min-width: 0 !important;
         max-width: none !important;
     }
-    /* 隐藏所有隐藏按钮 */
-    button[key*="_hidden"] {
-        display: none !important;
-        visibility: hidden !important;
-        width: 0 !important;
-        height: 0 !important;
-        padding: 0 !important;
-        margin: 0 !important;
+    /* 顶部图标按钮样式 - 去掉边框，紧密排列 */
+    button[key="dl_btn"],
+    button[key="wx_btn"],
+    button[key="pl_btn"] {
+        background: transparent !important;
         border: none !important;
-        position: absolute !important;
-        left: -9999px !important;
+        box-shadow: none !important;
+        font-size: 24px !important;
+        padding: 2px !important;
+        margin: 0 !important;
+        color: #1C1C1E !important;
+        min-width: auto !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+    /* 菜品图标按钮样式 - 去掉边框，紧密排列 */
+    .dish-card button[key*="lk_"],
+    .dish-card button[key*="dl_"],
+    .dish-card button[key*="ck_"],
+    .dish-card button[key*="sw_"] {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-size: 22px !important;
+        padding: 2px !important;
+        margin: 0 !important;
+        color: #8E8E93 !important;
+        min-width: auto !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+    /* 喜欢按钮红色 */
+    .dish-card button[key*="lk_"] {
+        color: #FF3B30 !important;
+    }
+    /* 烹饪按钮蓝色 */
+    .dish-card button[key*="ck_"] {
+        color: #007AFF !important;
+        font-weight: bold !important;
     }
     [data-testid="stHorizontalBlock"] { 
         gap: 0 !important; /* 完全移除间距 */
@@ -291,19 +319,19 @@ st.markdown("""
             -webkit-overflow-scrolling: touch;
         }
         
-        /* 菜品图标按钮：让边框无限接近图标大小 */
+        /* 菜品图标按钮：紧密排列，去掉边框 */
         .dish-label {
             padding-left: 5px;
             margin-bottom: 3px;
         }
         /* 确保菜品图标按钮容器紧密排列 */
         .dish-card [data-testid="stHorizontalBlock"] {
-            gap: 0.1rem !important;
+            gap: 2px !important;
             padding: 0 !important;
             margin: 0 !important;
         }
         .dish-card [data-testid="column"] {
-            padding: 0 2px !important;
+            padding: 0 1px !important;
             margin: 0 !important;
             flex: 0 0 auto !important;
         }
@@ -311,42 +339,30 @@ st.markdown("""
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            width: 28px !important;
-            height: 28px !important;
             font-size: 20px !important;
             padding: 2px !important;
             margin: 0 !important;
-            min-width: 28px !important;
-            line-height: 1 !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
+            min-width: auto !important;
+            width: 100% !important;
+            height: auto !important;
         }
-        /* 顶部图标按钮也缩小到接近图标大小 */
-        div[data-testid="column"]:nth-of-type(2) button,
-        div[data-testid="column"]:nth-of-type(3) button,
-        div[data-testid="column"]:nth-of-type(4) button {
+        /* 顶部图标按钮也去掉边框 */
+        button[key="dl_btn"],
+        button[key="wx_btn"],
+        button[key="pl_btn"] {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            width: 28px !important;
-            height: 28px !important;
             font-size: 20px !important;
             padding: 2px !important;
             margin: 0 !important;
-            min-width: 28px !important;
-            line-height: 1 !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
         }
         /* 顶部按钮容器也缩小 */
-        div[data-testid="column"]:nth-of-type(2),
-        div[data-testid="column"]:nth-of-type(3),
-        div[data-testid="column"]:nth-of-type(4) {
-            padding: 0 !important;
-            margin: 0 !important;
-            flex: 0 0 auto !important;
+        [data-testid="stHorizontalBlock"] {
+            gap: 2px !important;
+        }
+        [data-testid="column"] {
+            padding: 0 1px !important;
         }
         /* 移动端：进一步减小卡片间距和内部空间 */
         .dish-card {
@@ -954,51 +970,17 @@ else:
         </div>
         ''', unsafe_allow_html=True)
     
-    # 下载、推送、计划图标在第二行，紧密排列，去掉边框
-    # 使用HTML直接布局，避免Streamlit列布局的间隔问题
-    st.markdown('''
-    <div style="display: flex; gap: 8px; justify-content: flex-start; align-items: center; padding: 5px 0; margin-bottom: 2px;">
-        <button id="top-dl-btn" style="background: transparent; border: none; font-size: 24px; padding: 0; cursor: pointer;">📥</button>
-        <button id="top-wx-btn" style="background: transparent; border: none; font-size: 24px; padding: 0; cursor: pointer;">💬</button>
-        <button id="top-pl-btn" style="background: transparent; border: none; font-size: 24px; padding: 0; cursor: pointer;">📅</button>
-    </div>
-    ''', unsafe_allow_html=True)
-    
-    # 使用隐藏的Streamlit按钮来触发功能
-    icon_col1, icon_col2, icon_col3 = st.columns([0.1, 0.1, 0.1], gap="small")
+    # 下载、推送、计划图标在第二行，直接使用Streamlit按钮，CSS控制紧密排列
+    icon_col1, icon_col2, icon_col3 = st.columns([1, 1, 1], gap="small")
     with icon_col1:
         if st.session_state.menu_state['breakfast']:
-            st.download_button("", data=create_menu_card_image(st.session_state.menu_state, st.session_state.user_data['nickname']), file_name="menu.png", key="dl_btn_hidden", use_container_width=False)
+            st.download_button("📥", data=create_menu_card_image(st.session_state.menu_state, st.session_state.user_data['nickname']), file_name="menu.png", key="dl_btn", use_container_width=True)
         else: 
-            st.button("", disabled=True, key="dl_btn_hidden", use_container_width=False)
+            st.button("📥", disabled=True, key="dl_btn", use_container_width=True)
     with icon_col2:
-        st.button("", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn_hidden", use_container_width=False)
+        st.button("💬", on_click=lambda: st.toast("✅ 已发送微信"), key="wx_btn", use_container_width=True)
     with icon_col3:
-        st.button("", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn_hidden", use_container_width=False)
-    
-    # 使用JavaScript连接HTML按钮和Streamlit按钮
-    st.markdown('''
-    <script>
-    (function() {
-        var dlBtn = document.getElementById('top-dl-btn');
-        var wxBtn = document.getElementById('top-wx-btn');
-        var plBtn = document.getElementById('top-pl-btn');
-        var dlHidden = document.querySelector('button[key="dl_btn_hidden"]');
-        var wxHidden = document.querySelector('button[key="wx_btn_hidden"]');
-        var plHidden = document.querySelector('button[key="pl_btn_hidden"]');
-        
-        if (dlBtn && dlHidden) {
-            dlBtn.onclick = function() { dlHidden.click(); };
-        }
-        if (wxBtn && wxHidden) {
-            wxBtn.onclick = function() { wxHidden.click(); };
-        }
-        if (plBtn && plHidden) {
-            plBtn.onclick = function() { plHidden.click(); };
-        }
-    })();
-    </script>
-    ''', unsafe_allow_html=True)
+        st.button("📅", on_click=lambda: st.toast("📅 计划已生成"), key="pl_btn", use_container_width=True)
 
     # 3. 生成按钮（美观整洁，居中显示）
     # 使用HTML包装确保居中，减小上方留白
@@ -1021,57 +1003,17 @@ else:
             # 菜名单独一行
             st.markdown(f'<div class="dish-label">{d["name"]}</div>', unsafe_allow_html=True)
             
-            # 4个图标按钮在菜名下面，使用HTML直接布局，避免间隔问题
-            like_icon = "❤️" if is_l else "🙂"
-            dislike_icon = "⚫" if is_dl else "😐"
-            st.markdown(f'''
-            <div style="display: flex; gap: 4px; justify-content: flex-start; align-items: center; padding: 2px 5px;">
-                <button id="like_{k}" style="background: transparent; border: none; font-size: 22px; padding: 0; cursor: pointer; color: {"#FF3B30" if is_l else "#8E8E93"};">{like_icon}</button>
-                <button id="dislike_{k}" style="background: transparent; border: none; font-size: 22px; padding: 0; cursor: pointer; color: #8E8E93;">{dislike_icon}</button>
-                <button id="cook_{k}" style="background: transparent; border: none; font-size: 22px; padding: 0; cursor: pointer; color: #007AFF; font-weight: bold;">🍳</button>
-                <button id="swap_{k}" style="background: transparent; border: none; font-size: 22px; padding: 0; cursor: pointer; color: #8E8E93;">🔄</button>
-            </div>
-            ''', unsafe_allow_html=True)
-            
-            # 使用隐藏的Streamlit按钮来触发功能
-            b1, b2, b3, b4 = st.columns([0.1, 0.1, 0.1, 0.1], gap="small")
+            # 4个图标按钮在菜名下面，直接使用Streamlit按钮，CSS控制紧密排列
+            b1, b2, b3, b4 = st.columns([1, 1, 1, 1], gap="small")
             with b1: 
-                if st.button("", key=f"lk_{k}_hidden", use_container_width=False): toggle_feedback(d['name'], 'like'); st.rerun()
+                if st.button("❤️" if is_l else "🙂", key=f"lk_{k}", use_container_width=True): toggle_feedback(d['name'], 'like'); st.rerun()
             with b2:
-                if st.button("", key=f"dl_{k}_hidden", use_container_width=False): toggle_feedback(d['name'], 'dislike'); st.rerun()
+                label = "⚫" if is_dl else "😐"
+                if st.button(label, key=f"dl_{k}", use_container_width=True): toggle_feedback(d['name'], 'dislike'); st.rerun()
             with b3:
-                if st.button("", key=f"ck_{k}_hidden", use_container_width=False): enter_cook_mode(d); st.rerun()
+                if st.button("🍳", key=f"ck_{k}", use_container_width=True): enter_cook_mode(d); st.rerun()
             with b4:
-                if st.button("", key=f"sw_{k}_hidden", use_container_width=False): swap_dish(k, pool_keys[idx]); st.rerun()
-            
-            # 使用JavaScript连接HTML按钮和Streamlit按钮
-            st.markdown(f'''
-            <script>
-            (function() {{
-                var likeBtn = document.getElementById('like_{k}');
-                var dislikeBtn = document.getElementById('dislike_{k}');
-                var cookBtn = document.getElementById('cook_{k}');
-                var swapBtn = document.getElementById('swap_{k}');
-                var likeHidden = document.querySelector('button[key="lk_{k}_hidden"]');
-                var dislikeHidden = document.querySelector('button[key="dl_{k}_hidden"]');
-                var cookHidden = document.querySelector('button[key="ck_{k}_hidden"]');
-                var swapHidden = document.querySelector('button[key="sw_{k}_hidden"]');
-                
-                if (likeBtn && likeHidden) {{
-                    likeBtn.onclick = function() {{ likeHidden.click(); }};
-                }}
-                if (dislikeBtn && dislikeHidden) {{
-                    dislikeBtn.onclick = function() {{ dislikeHidden.click(); }};
-                }}
-                if (cookBtn && cookHidden) {{
-                    cookBtn.onclick = function() {{ cookHidden.click(); }};
-                }}
-                if (swapBtn && swapHidden) {{
-                    swapBtn.onclick = function() {{ swapHidden.click(); }};
-                }}
-            }})();
-            </script>
-            ''', unsafe_allow_html=True)
+                if st.button("🔄", key=f"sw_{k}", use_container_width=True): swap_dish(k, pool_keys[idx]); st.rerun()
             
             nf = [normalize_ingredient(i) for i in st.session_state.user_data['fridge_items']]
             ing_html = "".join([f'<span class="pill {"pill-hit" if normalize_ingredient(i) in nf else ""}">{i}</span>' for i in d['ingredients']])
