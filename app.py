@@ -275,7 +275,7 @@ st.markdown("""
             -webkit-overflow-scrolling: touch;
         }
         
-        /* 菜品图标按钮：紧密排列在一行，去掉所有背景框 */
+        /* 菜品图标按钮：让边框无限接近图标大小 */
         .dish-label {
             padding-left: 5px;
             margin-bottom: 3px;
@@ -287,32 +287,54 @@ st.markdown("""
             margin: 0 !important;
         }
         .dish-card [data-testid="column"] {
-            padding: 0 1px !important;
+            padding: 0 2px !important;
             margin: 0 !important;
+            flex: 0 0 auto !important;
         }
         .dish-card [data-testid="column"] button {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            height: 32px !important;
+            width: 28px !important;
+            height: 28px !important;
             font-size: 20px !important;
-            padding: 0 !important;
+            padding: 2px !important;
             margin: 0 !important;
+            min-width: 28px !important;
+            line-height: 1 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
-        /* 顶部图标按钮也去掉背景框 */
+        /* 顶部图标按钮也缩小到接近图标大小 */
         div[data-testid="column"]:nth-of-type(2) button,
         div[data-testid="column"]:nth-of-type(3) button,
         div[data-testid="column"]:nth-of-type(4) button {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            height: 32px !important;
+            width: 28px !important;
+            height: 28px !important;
             font-size: 20px !important;
+            padding: 2px !important;
+            margin: 0 !important;
+            min-width: 28px !important;
+            line-height: 1 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        /* 顶部按钮容器也缩小 */
+        div[data-testid="column"]:nth-of-type(2),
+        div[data-testid="column"]:nth-of-type(3),
+        div[data-testid="column"]:nth-of-type(4) {
             padding: 0 !important;
+            margin: 0 !important;
+            flex: 0 0 auto !important;
         }
     }
 
-    /* 顶部图标按钮样式 - 完全去掉背景框，只显示图标 */
+    /* 顶部图标按钮样式 - 让边框无限接近图标大小 */
     button[key="dl_btn"],
     button[key="wx_btn"],
     button[key="pl_btn"],
@@ -322,12 +344,18 @@ st.markdown("""
         border: none !important;
         box-shadow: none !important;
         font-size: 24px !important;
-        padding: 5px !important;
+        padding: 2px !important;
+        margin: 0 !important;
         color: #1C1C1E !important;
-        min-width: auto !important;
-        width: auto !important;
+        min-width: 28px !important;
+        width: 28px !important;
+        height: 28px !important;
+        line-height: 1 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
-    /* 通用顶部按钮样式 - 覆盖所有可能的按钮，强制去掉背景 */
+    /* 通用顶部按钮样式 - 让边框无限接近图标大小 */
     div[data-testid="column"]:nth-child(2) button,
     div[data-testid="column"]:nth-child(3) button,
     div[data-testid="column"]:nth-child(4) button,
@@ -338,10 +366,24 @@ st.markdown("""
         border: none !important;
         box-shadow: none !important;
         font-size: 24px !important;
-        padding: 5px !important;
+        padding: 2px !important;
+        margin: 0 !important;
         color: #1C1C1E !important;
-        min-width: auto !important;
-        width: auto !important;
+        min-width: 28px !important;
+        width: 28px !important;
+        height: 28px !important;
+        line-height: 1 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    /* 顶部按钮容器也缩小 */
+    div[data-testid="column"]:nth-child(2),
+    div[data-testid="column"]:nth-child(3),
+    div[data-testid="column"]:nth-child(4) {
+        padding: 0 !important;
+        margin: 0 !important;
+        flex: 0 0 auto !important;
     }
     /* 移动端进一步优化图标按钮 */
     @media (max-width: 768px) {
@@ -390,7 +432,7 @@ st.markdown("""
         margin-bottom: 5px;
     }
     
-    /* 菜品图标按钮 - 完全去掉背景框，紧密排列 */
+    /* 菜品图标按钮 - 让边框无限接近图标大小 */
     .dish-card [data-testid="column"] button,
     .dish-card [data-testid="column"] button[kind="secondary"],
     .dish-card [data-testid="column"] button[kind="primary"],
@@ -398,13 +440,23 @@ st.markdown("""
         background: transparent !important; 
         border: none !important;
         font-size: 22px !important; 
-        width: 100% !important; 
-        height: 40px !important; 
-        padding: 0 !important; 
+        width: 32px !important; 
+        height: 32px !important; 
+        padding: 2px !important; 
         margin: 0 !important;
         box-shadow: none !important; 
         color: #8E8E93 !important;
-        min-width: auto !important;
+        min-width: 32px !important;
+        line-height: 1 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    /* 菜品按钮容器也缩小 */
+    .dish-card [data-testid="column"] {
+        padding: 0 2px !important;
+        margin: 0 !important;
+        flex: 0 0 auto !important;
     }
     /* 喜欢按钮红色 - 通过key识别 */
     .dish-card button[key*="lk_"] {
